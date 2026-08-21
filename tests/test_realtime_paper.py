@@ -1,8 +1,10 @@
 import asyncio
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
+from unittest.mock import patch
 
 from quant_platform.domain import Quote, Venue
+from quant_platform.pipeline import PaperArbitragePipeline
 from quant_platform.realtime_paper import QuoteCache, RealtimePaperArbitrage
 
 
@@ -32,17 +34,21 @@ def test_runtime_waits_for_two_venues_before_pipeline() -> None:
     runtime = RealtimePaperArbitrage()
     calls: list[tuple[list[Quote], Decimal, Decimal]] = []
 
-    def fake_run(quotes: list[Quote], portfolio: Decimal, quantity: Decimal) -> None:
+    def fake_run(
+        _pipeline: PaperArbitragePipeline,
+        quotes: list[Quote],
+        portfolio: Decimal,
+        quantity: Decimal,
+    ) -> None:
         calls.append((quotes, portfolio, quantity))
 
-    runtime.pipeline.run = fake_run  # type: ignore[method-assign]
+    with patch.object(PaperArbitragePipeline, "run", fake_run):
+        async def scenario() -> None:
+            await runtime.on_quote(quote(Venue.BINANCE, "100", "101"))
+            assert calls == []
+            await runtime.on_quote(quote(Venue.BYBIT, "102", "103"))
 
-    async def scenario() -> None:
-        await runtime.on_quote(quote(Venue.BINANCE, "100", "101"))
-        assert calls == []
-        await runtime.on_quote(quote(Venue.BYBIT, "102", "103"))
-
-    asyncio.run(scenario())
+        asyncio.run(scenario())
 
     assert len(calls) == 1
     assert {item.venue for item in calls[0][0]} == {Venue.BINANCE, Venue.BYBIT}
