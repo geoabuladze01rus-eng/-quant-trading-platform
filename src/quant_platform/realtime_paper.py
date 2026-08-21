@@ -101,5 +101,10 @@ def build_default_runtime() -> RealtimePaperArbitrage:
     return RealtimePaperArbitrage()
 
 
-if __name__ == "__main__":
+def main() -> None:
+    """Start the safe-by-default real-time paper-trading runtime."""
     asyncio.run(build_default_runtime().start())
+
+
+if __name__ == "__main__":
+    main()
