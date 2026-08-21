@@ -40,7 +40,7 @@ class QuoteCache:
 
 @dataclass(slots=True)
 class RealtimePaperArbitrage:
-    """Runs public market-data collectors and feeds fresh quotes into paper execution."""
+    """Run public market-data collectors and feed fresh quotes into paper execution."""
 
     symbol: str = "BTCUSDT"
     venues: tuple[Venue, ...] = (Venue.BINANCE, Venue.BYBIT, Venue.OKX)
@@ -52,6 +52,10 @@ class RealtimePaperArbitrage:
     execution: PaperExecutionEngine = field(default_factory=PaperExecutionEngine)
     audit: AuditLog = field(default_factory=AuditLog)
     strategy: InterExchangeArbitrageStrategy = field(default_factory=InterExchangeArbitrageStrategy)
+    cache: QuoteCache = field(init=False)
+    pipeline: PaperArbitragePipeline = field(init=False)
+    _last_decision_at: float = field(init=False, default=0.0)
+    _tasks: list[asyncio.Task[None]] = field(init=False, default_factory=list)
 
     def __post_init__(self) -> None:
         self.cache = QuoteCache()
@@ -62,8 +66,6 @@ class RealtimePaperArbitrage:
             audit=self.audit,
             strategy=self.strategy,
         )
-        self._last_decision_at = 0.0
-        self._tasks: list[asyncio.Task[None]] = []
 
     async def on_quote(self, quote: Quote) -> None:
         self.cache.update(quote)
