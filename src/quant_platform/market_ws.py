@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import asyncio
 import json
-import time
 from abc import ABC, abstractmethod
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
@@ -74,28 +73,33 @@ class WebSocketCollector(ABC):
                     self._stats.last_message_monotonic,
                     self._stats.last_latency_ms,
                 )
-                await asyncio.wait_for(self._stop.wait(), timeout=backoff)
+                try:
+                    await asyncio.wait_for(self._stop.wait(), timeout=backoff)
+                except TimeoutError:
+                    pass
                 backoff = min(backoff * 2.0, 30.0)
 
     async def stop(self) -> None:
         self._stop.set()
 
     async def _consume(self, websocket: ClientConnection) -> None:
+        loop = asyncio.get_running_loop()
         async for raw in websocket:
-            received = time.monotonic()
+            received = loop.time()
             payload = json.loads(raw)
             quote = self.parse_message(payload)
             if quote is None:
                 continue
-            latency_ms = (received - quote.timestamp.timestamp()) * 1000.0
+            # Quote.now() timestamps the normalized event at ingestion time. Exchange
+            # event timestamps will be added to the domain model before latency-based
+            # execution is enabled. For now this metric is explicitly zero rather than
+            # pretending to measure network latency.
             self._stats = CollectorStats(
                 self._stats.messages + 1,
                 self._stats.reconnects,
                 received,
-                latency_ms,
+                0.0,
             )
-            if latency_ms < 0 or latency_ms > self.stale_after_seconds * 1000:
-                continue
             await self.handler(quote)
 
 
