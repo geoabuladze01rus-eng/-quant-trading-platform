@@ -6,7 +6,40 @@ Private research and production platform for autonomous algorithmic trading.
 
 The platform is being developed first as a private trading laboratory and later as a commercial SaaS product with web, iOS and Android clients.
 
-Core principles:
+## Current milestone: real-time paper trading
+
+The first end-to-end loop is now implemented:
+
+```text
+Binance / Bybit / OKX WebSocket
+              ↓
+        Quote normalization
+              ↓
+          Freshness gate
+              ↓
+    Inter-exchange arbitrage
+              ↓
+          Risk Engine
+              ↓
+       Paper Execution
+              ↓
+          Audit Log
+```
+
+The runtime is **paper-only**. It does not submit live orders.
+
+Run locally after installing the development dependencies:
+
+```bash
+pip install -e ".[dev]"
+pytest -q
+ruff check .
+quant-paper-live
+```
+
+Default paper configuration uses BTCUSDT, a 0.001 BTC test quantity, a $100,000 virtual portfolio and a 2-second decision cooldown. Quotes older than the scanner freshness threshold are ignored.
+
+## Product principles
 
 - automated execution with no emotional decisions;
 - exchange/broker agnostic trading core;
