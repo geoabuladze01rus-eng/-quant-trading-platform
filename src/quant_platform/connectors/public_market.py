@@ -16,10 +16,20 @@ class BinanceSpotConnector(VenueConnector):
 
     async def get_quote(self, symbol: str) -> Quote:
         async with httpx.AsyncClient(timeout=2.0) as client:
-            response = await client.get(f"{self.base_url}/api/v3/ticker/bookTicker", params={"symbol": symbol})
+            response = await client.get(
+                f"{self.base_url}/api/v3/ticker/bookTicker",
+                params={"symbol": symbol},
+            )
             response.raise_for_status()
             data = response.json()
-        return Quote.now(self.venue, symbol, data["bidPrice"], data["askPrice"], data["bidQty"], data["askQty"])
+        return Quote.now(
+            self.venue,
+            symbol,
+            data["bidPrice"],
+            data["askPrice"],
+            data["bidQty"],
+            data["askQty"],
+        )
 
     async def get_balance(self, asset: str) -> Decimal:
         raise RuntimeError("public Binance market-data endpoint cannot provide private balances")
@@ -39,7 +49,14 @@ class BybitSpotConnector(VenueConnector):
             )
             response.raise_for_status()
             data = response.json()["result"]["list"][0]
-        return Quote.now(self.venue, symbol, data["bid1Price"], data["ask1Price"], data["bid1Size"], data["ask1Size"])
+        return Quote.now(
+            self.venue,
+            symbol,
+            data["bid1Price"],
+            data["ask1Price"],
+            data["bid1Size"],
+            data["ask1Size"],
+        )
 
     async def get_balance(self, asset: str) -> Decimal:
         raise RuntimeError("public Bybit market-data endpoint cannot provide private balances")
@@ -60,7 +77,14 @@ class OKXSpotConnector(VenueConnector):
             )
             response.raise_for_status()
             data = response.json()["data"][0]
-        return Quote.now(self.venue, symbol, data["bidPx"], data["askPx"], data["bidSz"], data["askSz"])
+        return Quote.now(
+            self.venue,
+            symbol,
+            data["bidPx"],
+            data["askPx"],
+            data["bidSz"],
+            data["askSz"],
+        )
 
     async def get_balance(self, asset: str) -> Decimal:
         raise RuntimeError("public OKX market-data endpoint cannot provide private balances")
