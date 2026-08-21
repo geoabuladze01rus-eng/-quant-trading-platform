@@ -19,13 +19,26 @@ class PaperArbitragePipeline:
     audit: AuditLog
     strategy: InterExchangeArbitrageStrategy
 
-    def run(self, quotes: list[Quote], portfolio_value: Decimal, quantity: Decimal) -> dict[str, object]:
+    def run(
+        self,
+        quotes: list[Quote],
+        portfolio_value: Decimal,
+        quantity: Decimal,
+    ) -> dict[str, object]:
         opportunity = self.scanner.scan(quotes, quantity)
         if opportunity is None:
-            self.audit.record("strategy_no_trade", strategy=self.strategy.name, symbol=quotes[0].symbol if quotes else None)
+            self.audit.record(
+                "strategy_no_trade",
+                strategy=self.strategy.name,
+                symbol=quotes[0].symbol if quotes else None,
+            )
             return {"status": "no_trade", "reason": "no net-profitable opportunity"}
 
-        self.audit.record("opportunity", net_edge_bps=str(opportunity.net_edge_bps), symbol=opportunity.symbol)
+        self.audit.record(
+            "opportunity",
+            net_edge_bps=str(opportunity.net_edge_bps),
+            symbol=opportunity.symbol,
+        )
         results: list[dict[str, str]] = []
         for intent in self.strategy.intents(opportunity):
             decision = self.risk.evaluate(intent, portfolio_value)
@@ -39,8 +52,24 @@ class PaperArbitragePipeline:
             result = self.execution.submit(intent, decision)
             results.append(result)
             if result["status"] == "rejected":
-                self.audit.record("execution_rejected", venue=intent.venue.value, reason=decision.reason)
-                return {"status": "rejected", "results": results, "opportunity": opportunity}
+                self.audit.record(
+                    "execution_rejected",
+                    venue=intent.venue.value,
+                    reason=decision.reason,
+                )
+                return {
+                    "status": "rejected",
+                    "results": results,
+                    "opportunity": opportunity,
+                }
 
-        self.audit.record("paper_trade_accepted", strategy=self.strategy.name, symbol=opportunity.symbol)
-        return {"status": "paper_accepted", "results": results, "opportunity": opportunity}
+        self.audit.record(
+            "paper_trade_accepted",
+            strategy=self.strategy.name,
+            symbol=opportunity.symbol,
+        )
+        return {
+            "status": "paper_accepted",
+            "results": results,
+            "opportunity": opportunity,
+        }
