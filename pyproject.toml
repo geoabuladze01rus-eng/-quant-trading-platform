@@ -16,6 +16,9 @@ dependencies = [
   "websockets>=13,<16",
 ]
 
+[project.scripts]
+quant-paper-live = "quant_platform.realtime_paper:main"
+
 [project.optional-dependencies]
 dev = [
   "pytest>=8,<9",
