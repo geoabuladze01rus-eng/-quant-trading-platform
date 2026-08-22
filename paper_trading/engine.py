@@ -1,26 +1,21 @@
-"""Deterministic paper-trading engine for end-to-end strategy validation."""
+"""Deterministic paper execution engine with balances, fees and depth-aware fills."""
 from dataclasses import dataclass
 from decimal import Decimal
-@dataclass(frozen=True)
-class PaperOrder:
-    order_id:str; symbol:str; side:str; quantity:Decimal; price:Decimal
+from market_data.order_book_aggregator import Book, OrderBookAggregator
+from exchanges.base import Side
+@dataclass
+class PaperAccount:
+    venue:str; quote_balance:Decimal; base_balance:Decimal=Decimal("0")
 @dataclass(frozen=True)
 class PaperFill:
-    order_id:str; quantity:Decimal; price:Decimal; fee:Decimal
-class PaperTradingEngine:
-    def __init__(self,initial_cash:Decimal,fee_bps:Decimal=Decimal("5")):
-        self.cash=Decimal(str(initial_cash)); self.fee_bps=Decimal(str(fee_bps)); self.positions={}; self.fills=[]
-    def execute(self,order:PaperOrder)->PaperFill:
-        q=Decimal(str(order.quantity)); p=Decimal(str(order.price)); fee=q*p*self.fee_bps/Decimal("10000")
-        if q<=0 or p<=0: raise ValueError("quantity and price must be positive")
-        if order.side.upper()=="BUY":
-            cost=q*p+fee
-            if cost>self.cash: raise ValueError("insufficient_cash")
-            self.cash-=cost; self.positions[order.symbol]=self.positions.get(order.symbol,Decimal(0))+q
-        elif order.side.upper()=="SELL":
-            if q>self.positions.get(order.symbol,Decimal(0)): raise ValueError("insufficient_position")
-            self.positions[order.symbol]-=q; self.cash+=q*p-fee
-        else: raise ValueError("unsupported_side")
-        fill=PaperFill(order.order_id,q,p,fee); self.fills.append(fill); return fill
-    def equity(self,marks:dict[str,Decimal])->Decimal:
-        return self.cash+sum((self.positions.get(s,Decimal(0))*Decimal(str(px)) for s,px in marks.items()),Decimal(0))
+    venue:str; symbol:str; side:Side; quantity:Decimal; average_price:Decimal; fee:Decimal; sufficient_liquidity:bool
+class PaperExecutionEngine:
+    def __init__(self,fee_bps=Decimal("10")): self.fee_bps=Decimal(str(fee_bps)); self.accounts={}
+    def add_account(self,account:PaperAccount): self.accounts[account.venue]=account
+    def execute(self,book:Book,side:Side,quantity:Decimal)->PaperFill:
+        q=OrderBookAggregator.executable(book,side.value,Decimal(str(quantity)))
+        fee=q.notional*self.fee_bps/Decimal("10000"); account=self.accounts[book.venue]
+        if q.sufficient_liquidity:
+            if side==Side.BUY: account.quote_balance-=q.notional+fee; account.base_balance+=q.quantity
+            else: account.base_balance-=q.quantity; account.quote_balance+=q.notional-fee
+        return PaperFill(book.venue,book.symbol,side,q.quantity,q.average_price,fee,q.sufficient_liquidity)
