@@ -16,3 +16,16 @@ class ExchangeAdapter(Protocol):
     async def submit(self,order:NormalizedOrder)->NormalizedOrderResult: ...
     async def cancel(self,exchange_order_id:str)->bool: ...
     async def order_status(self,exchange_order_id:str)->NormalizedOrderResult: ...
+    async def health(self)->bool: ...
+class UnsupportedExchangeAdapter:
+    def __init__(self,venue:str): self.venue=venue
+    async def submit(self,order): raise NotImplementedError(f"{self.venue} adapter not configured")
+    async def cancel(self,exchange_order_id): raise NotImplementedError
+    async def order_status(self,exchange_order_id): raise NotImplementedError
+    async def health(self): return False
+class BinanceAdapter(UnsupportedExchangeAdapter):
+    def __init__(self): super().__init__("binance")
+class BybitAdapter(UnsupportedExchangeAdapter):
+    def __init__(self): super().__init__("bybit")
+class OKXAdapter(UnsupportedExchangeAdapter):
+    def __init__(self): super().__init__("okx")
