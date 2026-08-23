@@ -1,11 +1,8 @@
 from __future__ import annotations
-
 from dataclasses import dataclass
-from decimal import Decimal
-
 from ..arbitrage import ArbitrageOpportunity
 from ..domain import OrderIntent, Side
-
+from ..execution_group import ArbitrageExecutionGroup
 
 @dataclass(frozen=True, slots=True)
 class InterExchangeArbitrageStrategy:
@@ -18,22 +15,12 @@ class InterExchangeArbitrageStrategy:
             f"sell={opportunity.sell_venue.value}@{opportunity.sell_price}"
         )
         return (
-            OrderIntent(
-                venue=opportunity.buy_venue,
-                symbol=opportunity.symbol,
-                side=Side.BUY,
-                quantity=opportunity.quantity,
-                limit_price=opportunity.buy_price,
-                strategy=self.name,
-                reason=reason,
-            ),
-            OrderIntent(
-                venue=opportunity.sell_venue,
-                symbol=opportunity.symbol,
-                side=Side.SELL,
-                quantity=opportunity.quantity,
-                limit_price=opportunity.sell_price,
-                strategy=self.name,
-                reason=reason,
-            ),
+            OrderIntent(opportunity.buy_venue, opportunity.symbol, Side.BUY, opportunity.quantity,
+                        opportunity.buy_price, self.name, reason),
+            OrderIntent(opportunity.sell_venue, opportunity.symbol, Side.SELL, opportunity.quantity,
+                        opportunity.sell_price, self.name, reason),
         )
+
+    def execution_group(self, opportunity: ArbitrageOpportunity) -> ArbitrageExecutionGroup:
+        buy, sell = self.intents(opportunity)
+        return ArbitrageExecutionGroup(buy=buy, sell=sell)
