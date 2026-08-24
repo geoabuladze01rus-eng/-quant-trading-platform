@@ -3,6 +3,7 @@ from decimal import Decimal
 import pytest
 
 from quant_platform.domain import OrderIntent, Side, Venue
+from quant_platform.execution import PaperExecutionEngine
 from quant_platform.execution_orchestrator import (
     ExecutionOrchestrator,
     ExecutionState,
@@ -114,3 +115,37 @@ def test_unknown_execution_is_rejected() -> None:
             ExecutionState.FILLED,
             "filled",
         )
+
+
+def test_paper_execution_uses_canonical_lifecycle_and_preserves_status() -> None:
+    engine = PaperExecutionEngine()
+
+    result = engine.submit(
+        intent(),
+        RiskDecision(True, "ok"),
+        correlation_id="corr-1",
+        execution_group_id="group-1",
+    )
+
+    assert result["status"] == "paper_accepted"
+    assert result["state"] == ExecutionState.SUBMITTED.value
+    assert result["correlation_id"] == "corr-1"
+    assert result["execution_group_id"] == "group-1"
+    assert (
+        engine.orchestrator.current_state(result["execution_id"])
+        is ExecutionState.SUBMITTED
+    )
+
+
+def test_paper_execution_records_risk_rejection_in_canonical_lifecycle() -> None:
+    engine = PaperExecutionEngine()
+
+    result = engine.submit(intent(), RiskDecision(False, "daily loss"))
+
+    assert result["status"] == "rejected"
+    assert result["reason"] == "daily loss"
+    assert result["state"] == ExecutionState.RISK_REJECTED.value
+    assert (
+        engine.orchestrator.current_state(result["execution_id"])
+        is ExecutionState.RISK_REJECTED
+    )

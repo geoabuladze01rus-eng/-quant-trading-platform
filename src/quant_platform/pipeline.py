@@ -1,12 +1,15 @@
 from __future__ import annotations
+
 from dataclasses import dataclass
 from decimal import Decimal
+
 from .arbitrage import ArbitrageScanner
 from .audit import AuditLog
 from .domain import Quote
 from .execution import PaperExecutionEngine
 from .risk import RiskEngine
 from .strategies.inter_exchange import InterExchangeArbitrageStrategy
+
 
 @dataclass(slots=True)
 class PaperArbitragePipeline:
@@ -27,18 +30,52 @@ class PaperArbitragePipeline:
                           symbol=opportunity.symbol)
         group = self.strategy.execution_group(opportunity)
         decision = self.risk.evaluate_group(group, portfolio_value)
-        self.audit.record("risk_group_decision", approved=decision.approved,
-                          reason=decision.reason, buy_venue=group.buy.venue.value,
-                          sell_venue=group.sell.venue.value, quantity=str(group.quantity))
+        self.audit.record(
+            "risk_group_decision",
+            approved=decision.approved,
+            reason=decision.reason,
+            execution_group_id=group.execution_group_id,
+            buy_venue=group.buy.venue.value,
+            sell_venue=group.sell.venue.value,
+            quantity=str(group.quantity),
+        )
         if not decision.approved:
             return {"status": "rejected", "reason": decision.reason, "opportunity": opportunity}
 
-        results = [self.execution.submit(group.buy, decision),
-                   self.execution.submit(group.sell, decision)]
+        results = [
+            self.execution.submit(
+                group.buy,
+                decision,
+                execution_group_id=group.execution_group_id,
+            ),
+            self.execution.submit(
+                group.sell,
+                decision,
+                execution_group_id=group.execution_group_id,
+            ),
+        ]
         if any(result["status"] == "rejected" for result in results):
-            self.audit.record("execution_rejected", strategy=self.strategy.name)
-            return {"status": "rejected", "results": results, "opportunity": opportunity}
+            self.audit.record(
+                "execution_rejected",
+                strategy=self.strategy.name,
+                execution_group_id=group.execution_group_id,
+            )
+            return {
+                "status": "rejected",
+                "execution_group_id": group.execution_group_id,
+                "results": results,
+                "opportunity": opportunity,
+            }
 
-        self.audit.record("paper_trade_accepted", strategy=self.strategy.name,
-                          symbol=opportunity.symbol)
-        return {"status": "paper_accepted", "results": results, "opportunity": opportunity}
+        self.audit.record(
+            "paper_trade_accepted",
+            strategy=self.strategy.name,
+            symbol=opportunity.symbol,
+            execution_group_id=group.execution_group_id,
+        )
+        return {
+            "status": "paper_accepted",
+            "execution_group_id": group.execution_group_id,
+            "results": results,
+            "opportunity": opportunity,
+        }
