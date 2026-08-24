@@ -3,8 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from decimal import Decimal
 
-from .domain import OrderIntent
-from .execution_orchestrator import ExecutionOrchestrator
+from .domain import OrderIntent, Venue
+from .execution_orchestrator import ExecutionOrchestrator, GroupReconciliation
 from .risk import RiskDecision
 
 
@@ -13,6 +13,8 @@ class PaperExecutionEngine:
     """Safety-first executor. Live exchange calls are intentionally not implemented yet."""
 
     orchestrator: ExecutionOrchestrator = field(default_factory=ExecutionOrchestrator)
+    max_residual_hedge_notional: Decimal = Decimal(10000)
+    max_residual_hedge_slippage_bps: Decimal = Decimal(30)
 
     def submit(
         self,
@@ -80,3 +82,33 @@ class PaperExecutionEngine:
             "correlation_id": event.correlation_id or "",
             "execution_group_id": event.execution_group_id or "",
         }
+
+    def reconcile_group(
+        self,
+        execution_group_id: str,
+        *,
+        tolerance: Decimal = Decimal(0),
+    ) -> GroupReconciliation:
+        return self.orchestrator.reconcile_group(
+            execution_group_id,
+            tolerance=tolerance,
+        )
+
+    def hedge_residual(
+        self,
+        execution_group_id: str,
+        *,
+        venue: Venue,
+        fill_id: str,
+        price: Decimal,
+        reference_price: Decimal,
+    ) -> GroupReconciliation:
+        return self.orchestrator.execute_paper_residual_hedge(
+            execution_group_id,
+            venue=venue,
+            fill_id=fill_id,
+            price=price,
+            reference_price=reference_price,
+            max_notional=self.max_residual_hedge_notional,
+            max_slippage_bps=self.max_residual_hedge_slippage_bps,
+        )
