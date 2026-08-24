@@ -28,6 +28,29 @@ Binance / Bybit / OKX WebSocket
 
 The runtime is **paper-only**. It does not submit live orders.
 
+### Canonical execution lifecycle
+
+`src/quant_platform/execution_orchestrator.py` is the canonical execution state
+machine. `PaperExecutionEngine` is its only runtime facade; legacy execution
+experiments are not wired into the real-time paper pipeline.
+
+The paper lifecycle is explicit and terminal:
+
+1. `submit` registers both arbitrage legs under one `execution_group_id`.
+2. `process_fill` applies incremental fills, records cumulative quantity and
+   weighted-average price, and safely ignores exact duplicate fill events.
+3. `reconcile_group` finalizes the two primary legs after their orders have
+   filled, closed, or been cancelled. Equal full or partial fills complete as a
+   balanced group; unequal fills expose a signed residual and require a hedge.
+4. `hedge_residual` creates and fills a risk-reducing paper order. The default
+   guardrails cap hedge notional at 10,000 and adverse slippage at 30 bps. A
+   breach halts both primary legs instead of issuing the hedge.
+
+Every transition and fill is retained in the canonical event journal with its
+timestamp, correlation ID, execution group ID, order fields, and fill fields.
+The canonical path has no live-order method and does not call authenticated
+exchange connectors.
+
 Run locally after installing the development dependencies:
 
 ```bash
