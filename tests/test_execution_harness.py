@@ -11,9 +11,11 @@ class FakeAdapter:
         return Result(True,f"ex-{self.calls}")
 async def test_idempotent_retry():
     from execution.idempotent_router import IdempotentRouter
-    adapter=FakeAdapter(); router=IdempotentRouter(); order=object()
-    a=await router.submit("BINANCE","arb-1",adapter,order); b=await router.submit("BINANCE","arb-1",adapter,order)
-    assert a==b and adapter.calls==1
+    class RiskGate:
+        def approve(self, order): return True
+    adapter=FakeAdapter(); router=IdempotentRouter(RiskGate(),adapter); order=object()
+    a=await router.submit("arb-1",order); b=await router.submit("arb-1",order)
+    assert a.submitted and b.duplicate and adapter.calls==1
 async def test_two_leg_failure_requires_hedge():
     from execution.two_leg_manager import TwoLegExecutionManager
     class Router:

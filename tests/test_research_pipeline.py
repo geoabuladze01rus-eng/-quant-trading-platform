@@ -6,7 +6,7 @@ from backtest.research_pipeline import ResearchPipeline
 def test_pipeline_produces_consistent_pnl_and_equity():
     events = [
         BacktestEvent(1, Decimal("100"), Decimal("101"), Decimal("10")),
-        BacktestEvent(2, Decimal("100"), Decimal("99"), Decimal("10")),
+        BacktestEvent(2, Decimal("100"), Decimal("100"), Decimal("10")),
     ]
     pipeline = ResearchPipeline(
         backtest=BacktestEngine(fee_bps=Decimal("0")),

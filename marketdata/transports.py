@@ -34,7 +34,6 @@ class ReconnectingTransport:
             try:
                 client = await self.factory()
                 await client.connect()
-                self.attempt = 0
                 while self.running:
                     await self.on_message(await client.receive())
             except asyncio.CancelledError:

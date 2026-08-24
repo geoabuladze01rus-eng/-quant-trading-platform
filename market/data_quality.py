@@ -29,6 +29,6 @@ class DataQualityMonitor:
         if sequence_gap: score -= Decimal("0.35")
         if crossed: score -= Decimal("0.50")
         if timestamp_anomaly: score -= Decimal("0.35")
-        if spread_bps > self.max_spread_bps: score -= Decimal("0.20")
+        if not crossed and spread_bps > self.max_spread_bps: score -= Decimal("0.20")
         score = max(Decimal("0"), min(Decimal("1"), score))
         return DataQuality(score, stale, sequence_gap, crossed, timestamp_anomaly, spread_bps)

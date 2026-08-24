@@ -26,9 +26,9 @@ class Portfolio:
 
     def __post_init__(self) -> None:
         if self.peak_equity is None:
-            self.peak_equity = self.equity
+            self.peak_equity = max(self.starting_equity, self.equity)
         if self.day_start_equity is None:
-            self.day_start_equity = self.equity
+            self.day_start_equity = self.starting_equity
 
     @property
     def equity(self) -> Decimal:

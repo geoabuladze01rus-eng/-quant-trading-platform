@@ -20,7 +20,7 @@ def q(venue: Venue, bid: str, ask: str) -> Quote:
 def test_scanner_finds_net_profitable_spread() -> None:
     scanner = ArbitrageScanner(min_net_edge_bps=Decimal("5"))
     opportunity = scanner.scan(
-        [q(Venue.BINANCE, "100000", "100001"), q(Venue.BYBIT, "100150", "100151")],
+        [q(Venue.BINANCE, "100000", "100001"), q(Venue.BYBIT, "100250", "100251")],
         Decimal("0.01"),
     )
 

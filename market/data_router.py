@@ -22,9 +22,9 @@ class MarketDataRouter:
     def ingest(self, book, now_ms):
         connection = self.connections.get(book.venue)
         if connection is None: return RoutedBook(book, False, "unregistered_venue")
-        if connection.check_stale(now_ms): return RoutedBook(book, False, "stale_connection")
         if book.timestamp_ms > now_ms or now_ms - book.timestamp_ms > self.max_age_ms:
             return RoutedBook(book, False, "stale_book")
+        if connection.check_stale(now_ms): return RoutedBook(book, False, "stale_connection")
         if book.best_bid is None or book.best_ask is None or book.best_bid.price >= book.best_ask.price:
             return RoutedBook(book, False, "invalid_crossed_book")
         previous = self.latest.get((book.venue, book.symbol))

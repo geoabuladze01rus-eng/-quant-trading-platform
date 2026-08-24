@@ -25,11 +25,16 @@ class MarketReplay:
         skew_values: list[int] = []
         for event in events:
             count += 1
-            if any(event.timestamp_ms - q.timestamp_ms > self.max_quote_age_ms for q in event.quotes):
-                stale += 1
-            timestamps = [q.timestamp_ms for q in event.quotes if q.timestamp_ms > 0]
-            if len(timestamps) >= 2:
-                skew_values.append(max(timestamps) - min(timestamps))
+            stale_event = any(
+                event.timestamp_ms - q.timestamp_ms > self.max_quote_age_ms
+                for q in event.quotes
+            )
+            if stale_event:
+                stale += len(event.quotes)
+            else:
+                timestamps = [q.timestamp_ms for q in event.quotes if q.timestamp_ms > 0]
+                if len(timestamps) >= 2:
+                    skew_values.append(max(timestamps) - min(timestamps))
             if on_event(event):
                 opportunities += 1
         avg = Decimal(str(sum(skew_values) / len(skew_values))) if skew_values else Decimal("0")
