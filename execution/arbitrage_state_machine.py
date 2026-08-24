@@ -1,7 +1,8 @@
 """Two-leg arbitrage execution state machine. Paper-safe: no exchange API calls."""
 from dataclasses import dataclass
-from enum import Enum
 from decimal import Decimal
+from enum import Enum
+
 
 class ExecutionState(str, Enum):
     NEW = "NEW"
@@ -14,8 +15,8 @@ class ExecutionState(str, Enum):
 @dataclass
 class ExecutionContext:
     quantity: Decimal
-    buy_filled: Decimal = Decimal("0")
-    sell_filled: Decimal = Decimal("0")
+    buy_filled: Decimal = Decimal(0)
+    sell_filled: Decimal = Decimal(0)
     state: ExecutionState = ExecutionState.NEW
 
 class ArbitrageExecution:

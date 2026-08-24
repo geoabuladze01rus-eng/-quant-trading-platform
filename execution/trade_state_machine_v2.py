@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 from enum import Enum
+from typing import ClassVar
+
 
 class TradeState(str, Enum):
     SIGNAL="SIGNAL"; RISK_CHECK="RISK_CHECK"; RESERVED="RESERVED"; BUY_SUBMITTED="BUY_SUBMITTED"; BUY_PARTIAL="BUY_PARTIAL"; BUY_FILLED="BUY_FILLED"; SELL_SUBMITTED="SELL_SUBMITTED"; SELL_PARTIAL="SELL_PARTIAL"; SELL_FILLED="SELL_FILLED"; RECONCILE="RECONCILE"; HEDGE="HEDGE"; COMPLETE="COMPLETE"; FAILED="FAILED"; KILLED="KILLED"
@@ -12,7 +14,7 @@ class TradeContext:
     error: str|None=None
 
 class TradeStateMachine:
-    ALLOWED={
+    ALLOWED: ClassVar[dict[TradeState, set[TradeState]]] = {
         TradeState.SIGNAL:{TradeState.RISK_CHECK,TradeState.KILLED},
         TradeState.RISK_CHECK:{TradeState.RESERVED,TradeState.FAILED,TradeState.KILLED},
         TradeState.RESERVED:{TradeState.BUY_SUBMITTED,TradeState.FAILED,TradeState.KILLED},

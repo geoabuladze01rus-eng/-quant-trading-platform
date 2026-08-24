@@ -1,6 +1,8 @@
 """Residual-exposure hedge planning with hard notional and slippage caps."""
 from dataclasses import dataclass
 from decimal import Decimal
+
+
 @dataclass(frozen=True)
 class HedgeDecision:
     action:str; residual_quantity:Decimal; reason:str
@@ -8,7 +10,7 @@ class HedgeDecision:
 class HedgePlan:
     action:str; quantity:Decimal; max_price:Decimal; required:bool; reason:str
 class HedgeManager:
-    def __init__(self,max_hedge_slippage_bps=Decimal("30"),max_hedge_notional=Decimal("0")):
+    def __init__(self,max_hedge_slippage_bps=Decimal(30),max_hedge_notional=Decimal(0)):
         self.max_hedge_slippage_bps=Decimal(str(max_hedge_slippage_bps)); self.max_hedge_notional=Decimal(str(max_hedge_notional))
     def assess(self,buy_filled,sell_filled,target_quantity,hedge_slippage_bps):
         buy_filled=Decimal(str(buy_filled)); sell_filled=Decimal(str(sell_filled)); target_quantity=Decimal(str(target_quantity))

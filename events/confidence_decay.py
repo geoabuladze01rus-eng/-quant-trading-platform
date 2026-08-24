@@ -1,6 +1,8 @@
 """Time decay for news/event confidence; stale information loses influence."""
 from decimal import Decimal
 from math import exp, log
+
+
 class ConfidenceDecay:
     def __init__(self,half_life_ms):
         if half_life_ms<=0: raise ValueError("half_life_ms must be positive")

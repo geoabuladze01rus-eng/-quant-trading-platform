@@ -1,6 +1,8 @@
 """Append-only normalized PnL ledger and audit events."""
 from dataclasses import dataclass
 from decimal import Decimal
+
+
 @dataclass(frozen=True)
 class PnLEvent:
     event_id:str; timestamp_ms:int; strategy_id:str; venue:str; symbol:str; realized_pnl:Decimal; fee:Decimal; slippage:Decimal; event_type:str

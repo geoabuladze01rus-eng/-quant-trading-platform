@@ -1,6 +1,9 @@
 """Walk-forward validation to reduce backtest overfitting."""
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from typing import Sequence, Callable, Any
+from typing import Any
+
+
 @dataclass(frozen=True)
 class Window: train_start:int; train_end:int; test_start:int; test_end:int
 @dataclass(frozen=True)

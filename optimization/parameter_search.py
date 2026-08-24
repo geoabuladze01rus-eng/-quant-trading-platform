@@ -1,7 +1,10 @@
 """Bounded parameter search with deterministic selection and overfit-aware scoring."""
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from itertools import product
-from typing import Any, Callable, Mapping, Sequence
+from typing import Any
+
+
 @dataclass(frozen=True)
 class CandidateResult: params:Mapping[str,Any]; train_score:float; validation_score:float; robust_score:float
 class ParameterSearch:

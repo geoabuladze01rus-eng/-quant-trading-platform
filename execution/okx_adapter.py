@@ -1,6 +1,9 @@
 """OKX adapter: maps normalized orders to an injected OKX client."""
 from decimal import Decimal
-from execution.exchange_adapter import NormalizedOrder,NormalizedOrderResult
+
+from execution.exchange_adapter import NormalizedOrder, NormalizedOrderResult
+
+
 class OKXAdapter:
     venue="okx"
     def __init__(self,client): self.client=client

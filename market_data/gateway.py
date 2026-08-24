@@ -1,6 +1,8 @@
 """Venue-normalized market-data gateway with stale-feed detection."""
 from dataclasses import dataclass
 from decimal import Decimal
+
+
 @dataclass(frozen=True)
 class Quote:
     venue:str; symbol:str; bid:Decimal; ask:Decimal; bid_qty:Decimal; ask_qty:Decimal; timestamp_ms:int

@@ -1,9 +1,10 @@
 """Priority event bus for low-latency market and macro events."""
-from dataclasses import dataclass, field
-from enum import IntEnum
 import heapq
 import time
+from dataclasses import dataclass, field
+from enum import IntEnum
 from typing import Any
+
 
 class EventPriority(IntEnum):
     NORMAL = 10

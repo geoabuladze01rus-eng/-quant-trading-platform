@@ -1,6 +1,9 @@
 """Execution router facade combining risk approval with idempotent intent reservation."""
 from dataclasses import dataclass
+
 from execution.idempotency import IdempotencyRegistry, IntentStatus
+
+
 @dataclass(frozen=True)
 class RouteResult:
     intent_id:str; submitted:bool; duplicate:bool; reason:str

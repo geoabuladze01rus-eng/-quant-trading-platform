@@ -1,7 +1,9 @@
 """Validated multi-venue market data router."""
 from dataclasses import dataclass
-from market.normalized_orderbook import NormalizedOrderBook
+
 from market.connection_manager import ConnectionManager
+from market.normalized_orderbook import NormalizedOrderBook
+
 
 @dataclass(frozen=True)
 class RoutedBook:

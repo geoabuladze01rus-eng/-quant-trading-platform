@@ -2,6 +2,7 @@
 from dataclasses import dataclass
 from decimal import Decimal
 
+
 @dataclass(frozen=True)
 class PaperOrder:
     order_id: str
@@ -9,8 +10,8 @@ class PaperOrder:
     side: str
     price: Decimal
     quantity: Decimal
-    fee_bps: Decimal = Decimal("10")
-    slippage_bps: Decimal = Decimal("5")
+    fee_bps: Decimal = Decimal(10)
+    slippage_bps: Decimal = Decimal(5)
 
 @dataclass(frozen=True)
 class PaperFill:
@@ -34,9 +35,9 @@ class PaperExecutionEngine:
         order = self.orders[order_id]
         if quantity <= 0 or quantity > order.quantity: raise ValueError("invalid fill quantity")
         if market_price <= 0: raise ValueError("invalid market price")
-        direction = Decimal("1") if order.side == "BUY" else Decimal("-1")
-        filled_price = market_price * (Decimal("1") + direction * order.slippage_bps / Decimal("10000"))
-        fee = filled_price * quantity * order.fee_bps / Decimal("10000")
+        direction = Decimal(1) if order.side == "BUY" else Decimal(-1)
+        filled_price = market_price * (Decimal(1) + direction * order.slippage_bps / Decimal(10000))
+        fee = filled_price * quantity * order.fee_bps / Decimal(10000)
         fill = PaperFill(order_id, filled_price, quantity, fee)
         self.fills.append(fill)
         return fill

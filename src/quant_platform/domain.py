@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from enum import StrEnum
 
@@ -30,18 +30,18 @@ class Quote:
 
     @classmethod
     def now(cls, venue: Venue, symbol: str, bid: Decimal, ask: Decimal,
-            bid_size: Decimal, ask_size: Decimal) -> "Quote":
-        return cls(venue, symbol, bid, ask, bid_size, ask_size, datetime.now(timezone.utc))
+            bid_size: Decimal, ask_size: Decimal) -> Quote:
+        return cls(venue, symbol, bid, ask, bid_size, ask_size, datetime.now(UTC))
 
     @property
     def mid(self) -> Decimal:
-        return (self.bid + self.ask) / Decimal("2")
+        return (self.bid + self.ask) / Decimal(2)
 
     @property
     def spread_bps(self) -> Decimal:
         if self.mid == 0:
-            return Decimal("0")
-        return (self.ask - self.bid) / self.mid * Decimal("10000")
+            return Decimal(0)
+        return (self.ask - self.bid) / self.mid * Decimal(10000)
 
 
 @dataclass(frozen=True, slots=True)

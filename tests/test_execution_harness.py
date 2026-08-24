@@ -1,6 +1,8 @@
 """Deterministic execution harness tests for safe testnet rollout."""
 from dataclasses import dataclass
 from decimal import Decimal
+
+
 @dataclass
 class Result: submitted:bool; exchange_order_id:str
 class FakeAdapter:
@@ -23,5 +25,5 @@ async def test_two_leg_failure_requires_hedge():
         async def submit(self,*args): self.n+=1; return Result(self.n==1,f"ex-{self.n}")
     hedges=[]
     async def hedge(order,qty): hedges.append((order,qty))
-    result=await TwoLegExecutionManager(Router(),hedge).execute("b",object(),"s",object(),Decimal("1"))
+    result=await TwoLegExecutionManager(Router(),hedge).execute("b",object(),"s",object(),Decimal(1))
     assert result.reason=="sell_leg_rejected" and hedges

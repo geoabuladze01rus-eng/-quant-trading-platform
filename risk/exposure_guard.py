@@ -1,6 +1,8 @@
 """Hard portfolio exposure guard evaluated immediately before order submission."""
 from dataclasses import dataclass
 from decimal import Decimal
+
+
 @dataclass(frozen=True)
 class ExposureSnapshot:
     portfolio_notional:Decimal; asset_notional:Decimal; venue_notional:Decimal; strategy_notional:Decimal; daily_loss:Decimal

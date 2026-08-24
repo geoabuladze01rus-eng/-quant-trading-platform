@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
 
+
 class LegState(str, Enum): PENDING="PENDING"; PARTIAL="PARTIAL"; FILLED="FILLED"; FAILED="FAILED"; HEDGING="HEDGING"; HEDGED="HEDGED"
 @dataclass(frozen=True)
 class LegFill:
@@ -24,10 +25,10 @@ class TwoLegController:
     def reconcile(self,buy: LegFill,sell: LegFill,elapsed_ms: int)->HedgeDecision:
         imbalance=buy.filled-sell.filled
         if imbalance==0 and buy.state==LegState.FILLED and sell.state==LegState.FILLED:
-            return HedgeDecision("COMPLETE",Decimal("0"),"both_legs_filled")
+            return HedgeDecision("COMPLETE",Decimal(0),"both_legs_filled")
         if elapsed_ms>=self.max_unhedged_ms or buy.state==LegState.FAILED or sell.state==LegState.FAILED:
             if imbalance>0: return HedgeDecision("HEDGE_SELL",imbalance,"unhedged_buy_exposure")
             if imbalance<0: return HedgeDecision("HEDGE_BUY",-imbalance,"unhedged_sell_exposure")
         if imbalance>0: return HedgeDecision("WAIT_OR_CANCEL_SELL",imbalance,"temporary_buy_overfill")
         if imbalance<0: return HedgeDecision("WAIT_OR_CANCEL_BUY",-imbalance,"temporary_sell_overfill")
-        return HedgeDecision("WAIT",Decimal("0"),"legs_not_yet_filled")
+        return HedgeDecision("WAIT",Decimal(0),"legs_not_yet_filled")

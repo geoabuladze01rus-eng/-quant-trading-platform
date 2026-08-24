@@ -1,6 +1,7 @@
 """Fail-safe state machine for two-leg arbitrage execution."""
 from enum import Enum
 
+
 class TradeState(str, Enum):
     NEW = "NEW"
     VALIDATED = "VALIDATED"

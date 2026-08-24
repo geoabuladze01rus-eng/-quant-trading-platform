@@ -1,6 +1,8 @@
 """Finite-state execution controller for multi-leg arbitrage."""
-from enum import Enum
 from dataclasses import dataclass
+from enum import Enum
+
+
 class State(str,Enum): SEARCH="SEARCH"; ENTER="ENTER"; PARTIAL="PARTIAL"; HEDGE="HEDGE"; EXIT="EXIT"; HALT="HALT"
 @dataclass(frozen=True)
 class Transition:

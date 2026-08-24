@@ -1,8 +1,10 @@
 """Deterministic market-data replay with timing/quality statistics."""
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Callable, Iterable
+
 from strategies.inter_exchange_arbitrage import Quote
+
 
 @dataclass(frozen=True)
 class ReplayEvent:
@@ -37,5 +39,5 @@ class MarketReplay:
                     skew_values.append(max(timestamps) - min(timestamps))
             if on_event(event):
                 opportunities += 1
-        avg = Decimal(str(sum(skew_values) / len(skew_values))) if skew_values else Decimal("0")
+        avg = Decimal(str(sum(skew_values) / len(skew_values))) if skew_values else Decimal(0)
         return ReplayStats(count, opportunities, stale, avg)

@@ -1,8 +1,10 @@
 """Binance market-data adapter skeleton. Network transport is intentionally injected."""
+from collections.abc import Callable
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Callable
-from market.exchange_adapter import Ticker, OrderBook, Trade, Side
+
+from market.exchange_adapter import OrderBook, Side, Ticker, Trade
+
 
 @dataclass
 class BinanceMarketDataAdapter:

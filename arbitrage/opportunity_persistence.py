@@ -2,6 +2,8 @@
 from collections import deque
 from dataclasses import dataclass
 from decimal import Decimal
+
+
 @dataclass(frozen=True)
 class PersistenceStats:
     observations:int; confirmations:int; confirmation_rate:Decimal; age_ms:int; stable:bool

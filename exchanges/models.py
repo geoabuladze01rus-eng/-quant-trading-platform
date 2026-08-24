@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
 
+
 class OrderSide(str, Enum):
     BUY="BUY"; SELL="SELL"
 class OrderStatus(str, Enum):

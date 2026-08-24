@@ -1,6 +1,8 @@
 """Market-regime-aware strategy selector with explicit safety fallback."""
 from dataclasses import dataclass
 from enum import Enum
+
+
 class Regime(str,Enum): CALM="CALM"; TREND="TREND"; HIGH_VOL="HIGH_VOL"; STRESS="STRESS"; UNKNOWN="UNKNOWN"
 @dataclass(frozen=True)
 class RegimeFeatures: volatility:float; trend_strength:float; liquidity_score:float; anomaly_score:float

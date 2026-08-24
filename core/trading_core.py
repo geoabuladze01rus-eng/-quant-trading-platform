@@ -1,8 +1,10 @@
 """Unified decision pipeline: intelligence -> router -> risk."""
 from dataclasses import dataclass
 from decimal import Decimal
-from intelligence.strategy_router import StrategyRouter, StrategyPolicy
-from risk.risk_engine import RiskEngine, PortfolioState, RiskDecision
+
+from intelligence.strategy_router import StrategyPolicy, StrategyRouter
+from risk.risk_engine import PortfolioState, RiskDecision, RiskEngine
+
 
 @dataclass(frozen=True)
 class TradeIntent:

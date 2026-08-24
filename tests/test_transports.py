@@ -1,5 +1,7 @@
 import asyncio
+
 from marketdata.transports import ReconnectingTransport, TransportConfig
+
 
 class FakeClient:
     def __init__(self, messages):

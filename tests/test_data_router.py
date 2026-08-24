@@ -1,6 +1,7 @@
 from market.data_router import MarketDataRouter
 from market.normalized_orderbook import OrderBookNormalizer
 
+
 def book(ts=100, seq=1, bid='101', ask='102'):
     return OrderBookNormalizer.normalize('BINANCE','BTCUSDT',ts,[(bid,'1')],[(ask,'1')],seq)
 

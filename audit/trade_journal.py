@@ -1,7 +1,8 @@
 """Append-only trading decision journal for auditability and analytics."""
-from dataclasses import dataclass, asdict
-from decimal import Decimal
 import json
+from dataclasses import asdict, dataclass
+from decimal import Decimal
+
 
 @dataclass(frozen=True)
 class TradeEvent:
@@ -13,14 +14,14 @@ class TradeEvent:
     regime: str
     status: str
     reason: str = ""
-    spread_bps: Decimal = Decimal("0")
-    expected_net_bps: Decimal = Decimal("0")
-    quantity: Decimal = Decimal("0")
-    price: Decimal = Decimal("0")
-    fee: Decimal = Decimal("0")
-    slippage_bps: Decimal = Decimal("0")
-    latency_ms: Decimal = Decimal("0")
-    pnl: Decimal = Decimal("0")
+    spread_bps: Decimal = Decimal(0)
+    expected_net_bps: Decimal = Decimal(0)
+    quantity: Decimal = Decimal(0)
+    price: Decimal = Decimal(0)
+    fee: Decimal = Decimal(0)
+    slippage_bps: Decimal = Decimal(0)
+    latency_ms: Decimal = Decimal(0)
+    pnl: Decimal = Decimal(0)
 
 class TradeJournal:
     def __init__(self) -> None:

@@ -2,14 +2,15 @@
 from dataclasses import dataclass
 from decimal import Decimal
 
+
 @dataclass(frozen=True)
 class Quote:
     venue: str
     symbol: str
     bid: Decimal
     ask: Decimal
-    bid_size: Decimal = Decimal("0")
-    ask_size: Decimal = Decimal("0")
+    bid_size: Decimal = Decimal(0)
+    ask_size: Decimal = Decimal(0)
     timestamp_ms: int = 0
 
 @dataclass(frozen=True)
@@ -23,7 +24,7 @@ class ArbitrageSignal:
     net_edge: Decimal
 
 class InterExchangeArbitrage:
-    def __init__(self, fee_rates: dict[str, Decimal], slippage_bps: Decimal = Decimal("2"), latency_buffer_bps: Decimal = Decimal("1"), min_net_edge_bps: Decimal = Decimal("5"), max_quote_age_ms: int = 1000) -> None:
+    def __init__(self, fee_rates: dict[str, Decimal], slippage_bps: Decimal = Decimal(2), latency_buffer_bps: Decimal = Decimal(1), min_net_edge_bps: Decimal = Decimal(5), max_quote_age_ms: int = 1000) -> None:
         self.fee_rates = fee_rates
         self.slippage_bps = slippage_bps
         self.latency_buffer_bps = latency_buffer_bps
@@ -41,9 +42,9 @@ class InterExchangeArbitrage:
                 if qty <= 0:
                     continue
                 gross = (sell.bid - buy.ask) / buy.ask
-                costs = self.fee_rates.get(buy.venue, Decimal("0")) + self.fee_rates.get(sell.venue, Decimal("0")) + (self.slippage_bps + self.latency_buffer_bps) / Decimal("10000")
+                costs = self.fee_rates.get(buy.venue, Decimal(0)) + self.fee_rates.get(sell.venue, Decimal(0)) + (self.slippage_bps + self.latency_buffer_bps) / Decimal(10000)
                 net = gross - costs
-                if net * Decimal("10000") < self.min_net_edge_bps:
+                if net * Decimal(10000) < self.min_net_edge_bps:
                     continue
                 signal = ArbitrageSignal(buy.venue, sell.venue, buy.symbol, qty, gross, costs, net)
                 if best is None or signal.net_edge > best.net_edge:

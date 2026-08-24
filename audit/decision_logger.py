@@ -1,6 +1,8 @@
 """Append-only decision audit trail for deterministic trading decisions."""
 from dataclasses import dataclass
 from typing import Any
+
+
 @dataclass(frozen=True)
 class DecisionEvent:
     event_id:str; timestamp_ms:int; strategy_id:str; symbol:str; action:str; reason:str; inputs:dict[str,Any]

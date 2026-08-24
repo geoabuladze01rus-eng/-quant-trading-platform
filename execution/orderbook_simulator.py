@@ -2,6 +2,7 @@
 from dataclasses import dataclass
 from decimal import Decimal
 
+
 @dataclass(frozen=True)
 class BookLevel:
     price: Decimal
@@ -22,12 +23,12 @@ class OrderBookSimulator:
         if quantity<=0: raise ValueError("quantity must be positive")
         levels=asks if side.upper()=="BUY" else bids
         levels=sorted(levels,key=lambda x:x.price,reverse=side.upper()=="SELL")
-        remaining=quantity; notional=Decimal("0"); filled=Decimal("0"); consumed=0
+        remaining=quantity; notional=Decimal(0); filled=Decimal(0); consumed=0
         for level in levels:
             if level.price<=0 or level.quantity<0: raise ValueError("invalid book level")
             take=min(remaining,level.quantity)
             if take>0:
                 notional+=take*level.price; filled+=take; remaining-=take; consumed+=1
             if remaining==0: break
-        avg=notional/filled if filled else Decimal("0")
+        avg=notional/filled if filled else Decimal(0)
         return BookExecution(quantity,filled,notional,avg,remaining,consumed)

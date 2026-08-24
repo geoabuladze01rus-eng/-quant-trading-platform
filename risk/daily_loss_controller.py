@@ -2,12 +2,14 @@
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
+
+
 class RiskState(str,Enum): ACTIVE="ACTIVE"; WARNING="WARNING"; RISK_OFF="RISK_OFF"
 @dataclass(frozen=True)
 class RiskDecision:
     state:RiskState; daily_loss:Decimal; drawdown:Decimal; allow_new_positions:bool; reason:str
 class DailyLossController:
-    def __init__(self,max_daily_loss_pct:Decimal=Decimal("2"),warning_pct:Decimal=Decimal("1"),max_drawdown_pct:Decimal=Decimal("10")):
+    def __init__(self,max_daily_loss_pct:Decimal=Decimal(2),warning_pct:Decimal=Decimal(1),max_drawdown_pct:Decimal=Decimal(10)):
         self.max_daily_loss_pct=Decimal(str(max_daily_loss_pct)); self.warning_pct=Decimal(str(warning_pct)); self.max_drawdown_pct=Decimal(str(max_drawdown_pct))
     def evaluate(self,day_start_equity:Decimal,current_equity:Decimal,high_watermark:Decimal)->RiskDecision:
         start=Decimal(str(day_start_equity)); current=Decimal(str(current_equity)); high=Decimal(str(high_watermark))

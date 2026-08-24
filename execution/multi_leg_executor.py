@@ -2,9 +2,11 @@
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
+
+
 class LegState(str,Enum): PENDING="PENDING"; PARTIAL="PARTIAL"; FILLED="FILLED"; CANCELED="CANCELED"; HEDGE_REQUIRED="HEDGE_REQUIRED"
 @dataclass(frozen=True)
-class Leg: id:str; target_qty:Decimal; filled_qty:Decimal=Decimal("0"); state:LegState=LegState.PENDING
+class Leg: id:str; target_qty:Decimal; filled_qty:Decimal=Decimal(0); state:LegState=LegState.PENDING
 @dataclass(frozen=True)
 class ExecutionDecision: state:str; residual_qty:Decimal; hedge_qty:Decimal; action:str
 class MultiLegExecutor:

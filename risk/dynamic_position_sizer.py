@@ -1,6 +1,8 @@
 """Dynamic arbitrage position sizing from depth, edge and portfolio limits."""
 from dataclasses import dataclass
 from decimal import Decimal
+
+
 @dataclass(frozen=True)
 class PositionSize:
     requested:Decimal; allowed:Decimal; risk_notional:Decimal; reason:str

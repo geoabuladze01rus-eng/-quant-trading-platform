@@ -1,6 +1,8 @@
 """Idempotent order-intent registry preventing duplicate leg submissions."""
 from dataclasses import dataclass
 from enum import Enum
+
+
 class IntentStatus(str,Enum): NEW="NEW"; SUBMITTED="SUBMITTED"; FILLED="FILLED"; CANCELLED="CANCELLED"; FAILED="FAILED"
 @dataclass(frozen=True)
 class OrderIntent:

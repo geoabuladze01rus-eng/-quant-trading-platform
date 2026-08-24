@@ -2,6 +2,7 @@
 from dataclasses import dataclass
 from enum import Enum
 
+
 class RecoveryState(str, Enum):
     TRIPPED="TRIPPED"; DIAGNOSTIC="DIAGNOSTIC"; SAFE="SAFE"; PAPER="PAPER"; LIVE="LIVE"; FAILED="FAILED"
 

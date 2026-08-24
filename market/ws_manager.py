@@ -1,6 +1,8 @@
 """Resilient WebSocket session state machine: heartbeat, reconnect backoff and resync gating."""
 from dataclasses import dataclass
 from enum import Enum
+
+
 class ConnectionState(str,Enum): DISCONNECTED="DISCONNECTED"; CONNECTING="CONNECTING"; LIVE="LIVE"; BACKOFF="BACKOFF"; RESYNC="RESYNC"
 @dataclass(frozen=True)
 class ConnectionHealth:

@@ -1,7 +1,9 @@
 """Event-driven cross-venue arbitrage backtester with explicit costs."""
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Callable, Iterable
+
+
 @dataclass(frozen=True)
 class BacktestEvent:
     timestamp_ms:int; buy_price:Decimal; sell_price:Decimal; quantity:Decimal
@@ -12,7 +14,7 @@ class BacktestTrade:
 class BacktestResult:
     trades:tuple[BacktestTrade,...]; net_pnl:Decimal; win_rate:Decimal; total_trades:int
 class BacktestEngine:
-    def __init__(self,fee_bps=Decimal("10"),slippage_bps=Decimal("0"),min_edge_bps=None):
+    def __init__(self,fee_bps=Decimal(10),slippage_bps=Decimal(0),min_edge_bps=None):
         self.fee_bps=Decimal(str(fee_bps)); self.slippage_bps=Decimal(str(slippage_bps)); self.min_edge_bps=None if min_edge_bps is None else Decimal(str(min_edge_bps))
     def run(self,events:Iterable[BacktestEvent],signal:Callable[[BacktestEvent],bool]|None=None)->BacktestResult:
         trades=[]

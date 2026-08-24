@@ -1,5 +1,6 @@
 from execution.hedge_manager import HedgeManager
 
+
 def test_balanced_legs_need_no_hedge():
     d=HedgeManager().assess(2,2,2,5)
     assert d.action=="NONE" and d.residual_quantity==0

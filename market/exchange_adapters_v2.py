@@ -1,6 +1,8 @@
 """Normalized Binance, Bybit and OKX order-book adapter contract."""
 from dataclasses import dataclass
 from decimal import Decimal
+
+
 @dataclass(frozen=True)
 class BookLevel: price:Decimal; quantity:Decimal
 @dataclass(frozen=True)

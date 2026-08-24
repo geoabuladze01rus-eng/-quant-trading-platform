@@ -1,8 +1,9 @@
 """Append-only trade journal and deterministic performance analytics."""
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from math import sqrt
+
 
 @dataclass(frozen=True)
 class TradeEvent:
@@ -14,8 +15,8 @@ class TradeEvent:
     side: str
     quantity: Decimal
     price: Decimal
-    fee: Decimal = Decimal("0")
-    realized_pnl: Decimal = Decimal("0")
+    fee: Decimal = Decimal(0)
+    realized_pnl: Decimal = Decimal(0)
     latency_ms: float = 0.0
 
 class TradeJournal:
@@ -45,13 +46,13 @@ class PerformanceReport:
 def performance_report(events: list[TradeEvent], starting_equity: Decimal) -> PerformanceReport:
     fills = [e for e in events if e.event_type == "ORDER_FILLED"]
     pnl = [e.realized_pnl for e in fills]
-    fees = sum((e.fee for e in fills), Decimal("0"))
-    total = sum(pnl, Decimal("0")) - fees
+    fees = sum((e.fee for e in fills), Decimal(0))
+    total = sum(pnl, Decimal(0)) - fees
     wins = [x for x in pnl if x > 0]
     losses = [-x for x in pnl if x < 0]
-    win_rate = Decimal(len(wins)) / Decimal(len(pnl)) if pnl else Decimal("0")
-    profit_factor = sum(wins, Decimal("0")) / sum(losses, Decimal("0")) if losses else Decimal("0")
-    equity, peak, max_dd = starting_equity, starting_equity, Decimal("0")
+    win_rate = Decimal(len(wins)) / Decimal(len(pnl)) if pnl else Decimal(0)
+    profit_factor = sum(wins, Decimal(0)) / sum(losses, Decimal(0)) if losses else Decimal(0)
+    equity, peak, max_dd = starting_equity, starting_equity, Decimal(0)
     returns: list[float] = []
     for x in pnl:
         previous = equity
@@ -65,13 +66,13 @@ def performance_report(events: list[TradeEvent], starting_equity: Decimal) -> Pe
         mean = sum(returns) / len(returns)
         variance = sum((r - mean) ** 2 for r in returns) / (len(returns) - 1)
         std = sqrt(variance)
-        sharpe = Decimal(str(mean / std * sqrt(len(returns)))) if std else Decimal("0")
+        sharpe = Decimal(str(mean / std * sqrt(len(returns)))) if std else Decimal(0)
         down = sqrt(sum(min(r, 0.0) ** 2 for r in returns) / len(returns))
-        sortino = Decimal(str(mean / down * sqrt(len(returns)))) if down else Decimal("0")
+        sortino = Decimal(str(mean / down * sqrt(len(returns)))) if down else Decimal(0)
     else:
-        sharpe = sortino = Decimal("0")
-    avg_latency = Decimal(str(sum(e.latency_ms for e in fills) / len(fills))) if fills else Decimal("0")
+        sharpe = sortino = Decimal(0)
+    avg_latency = Decimal(str(sum(e.latency_ms for e in fills) / len(fills))) if fills else Decimal(0)
     return PerformanceReport(total, fees, len(fills), win_rate, profit_factor, max_dd, sharpe, sortino, avg_latency)
 
 def now_utc() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)

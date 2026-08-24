@@ -1,8 +1,11 @@
 """Exchange WebSocket payload parsers for normalized top-of-book feeds."""
+from collections.abc import Callable
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Any, Callable
+from typing import Any
+
 from marketdata.adapters import RawBookTicker
+
 
 @dataclass(frozen=True)
 class WebSocketConfig:

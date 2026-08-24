@@ -2,6 +2,7 @@
 from dataclasses import dataclass
 from decimal import Decimal
 
+
 @dataclass(frozen=True)
 class RiskLimits:
     max_daily_loss_pct: Decimal = Decimal("0.02")
@@ -15,9 +16,9 @@ class RiskLimits:
 class PortfolioState:
     equity: Decimal
     day_start_equity: Decimal
-    total_exposure: Decimal = Decimal("0")
-    asset_exposure: Decimal = Decimal("0")
-    venue_exposure: Decimal = Decimal("0")
+    total_exposure: Decimal = Decimal(0)
+    asset_exposure: Decimal = Decimal(0)
+    venue_exposure: Decimal = Decimal(0)
     concurrent_trades: int = 0
     kill_switch: bool = False
 
@@ -35,7 +36,7 @@ class RiskEngine:
             return RiskDecision(False, "kill_switch")
         if state.equity <= 0 or state.day_start_equity <= 0 or trade_notional <= 0:
             return RiskDecision(False, "invalid_portfolio_or_trade")
-        daily_loss = max(Decimal("0"), (state.day_start_equity - state.equity) / state.day_start_equity)
+        daily_loss = max(Decimal(0), (state.day_start_equity - state.equity) / state.day_start_equity)
         if daily_loss >= self.limits.max_daily_loss_pct:
             return RiskDecision(False, "daily_loss_limit")
         if trade_notional / state.equity > self.limits.max_trade_notional_pct:

@@ -1,6 +1,8 @@
 """Estimate opportunity survival under execution latency and edge decay."""
 from dataclasses import dataclass
 from decimal import Decimal
+
+
 @dataclass(frozen=True)
 class DecayInput:
     edge_bps:Decimal; decay_bps_per_ms:Decimal; round_trip_latency_ms:int; safety_margin_bps:Decimal

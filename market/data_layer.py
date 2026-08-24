@@ -2,6 +2,8 @@
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
+
+
 class FeedState(str,Enum): DISCONNECTED="DISCONNECTED"; CONNECTING="CONNECTING"; LIVE="LIVE"; STALE="STALE"; RESYNC="RESYNC"
 @dataclass(frozen=True)
 class MarketTick: venue:str; symbol:str; sequence:int; timestamp_ms:int; bid:Decimal; ask:Decimal

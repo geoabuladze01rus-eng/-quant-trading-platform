@@ -2,6 +2,8 @@
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
+
+
 class OrchestratorState(str,Enum): IDLE="IDLE"; SUBMITTING="SUBMITTING"; RECONCILING="RECONCILING"; HEDGING="HEDGING"; COMPLETED="COMPLETED"; HALTED="HALTED"
 @dataclass(frozen=True)
 class ExecutionResult:
@@ -16,7 +18,7 @@ class ExecutionOrchestrator:
         try:
             buy=await self.router.submit(intent.buy_venue,intent.idempotency_key+":buy",intent.buy_order)
             sell=await self.router.submit(intent.sell_venue,intent.idempotency_key+":sell",intent.sell_order)
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001 - execution boundary must halt safely
             self.state=OrchestratorState.HALTED
             return ExecutionResult(self.state,None,None,True,Decimal(0),f"submission_failure:{type(exc).__name__}")
         self.state=OrchestratorState.RECONCILING

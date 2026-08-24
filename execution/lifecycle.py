@@ -2,6 +2,8 @@
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
+
+
 class LifecycleState(str,Enum): READY="READY"; EXECUTING="EXECUTING"; RECONCILING="RECONCILING"; HEDGING="HEDGING"; COMPLETED="COMPLETED"; HALTED="HALTED"
 @dataclass(frozen=True)
 class LifecycleDecision:
@@ -12,7 +14,7 @@ class ExecutionLifecycle:
         d=self.supervisor.observe(exchange_healthy,False,False,False)
         self.state=LifecycleState.EXECUTING if d.allow_execution else LifecycleState.HALTED
         return LifecycleDecision(self.state,d.allow_execution,False,Decimal(0),d.reason)
-    def reconcile(self,target,buy_filled,sell_filled,tolerance=Decimal("0")):
+    def reconcile(self,target,buy_filled,sell_filled,tolerance=Decimal(0)):
         self.state=LifecycleState.RECONCILING
         r=self.reconciler.reconcile(target,buy_filled,sell_filled,tolerance)
         if r.hedge_required:

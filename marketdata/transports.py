@@ -2,10 +2,12 @@
 
 The transport owns connection lifecycle; parsing/normalization stays in adapters.
 """
-from dataclasses import dataclass
 import asyncio
 import random
-from typing import Awaitable, Callable, Protocol
+from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
+from typing import Protocol
+
 
 @dataclass(frozen=True)
 class TransportConfig:
@@ -50,8 +52,8 @@ class ReconnectingTransport:
                 if client is not None:
                     try:
                         await client.close()
-                    except Exception:
-                        pass
+                    except Exception:  # noqa: BLE001 - close is best-effort during recovery
+                        client = None
 
     def stop(self) -> None:
         self.running = False

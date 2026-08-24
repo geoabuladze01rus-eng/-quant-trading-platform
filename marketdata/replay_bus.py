@@ -1,15 +1,16 @@
 """Market-data event bus with heartbeat and reconnect state."""
+from collections.abc import Callable
 from dataclasses import dataclass
 from time import monotonic
-from typing import Callable, Generic, TypeVar
-T = TypeVar("T")
+
+
 @dataclass(frozen=True)
 class ConnectionState:
     venue: str
     connected: bool
     reconnect_attempt: int
     last_message_monotonic: float
-class MarketDataBus(Generic[T]):
+class MarketDataBus[T]:
     def __init__(self, heartbeat_timeout_s: float = 2.0, max_reconnect_attempts: int = 10) -> None:
         self.heartbeat_timeout_s = heartbeat_timeout_s
         self.max_reconnect_attempts = max_reconnect_attempts

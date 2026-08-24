@@ -1,6 +1,9 @@
 """Bybit adapter: converts normalized orders to a thin injected-client interface."""
-from execution.exchange_adapter import NormalizedOrder,NormalizedOrderResult
 from decimal import Decimal
+
+from execution.exchange_adapter import NormalizedOrder, NormalizedOrderResult
+
+
 class BybitAdapter:
     venue="bybit"
     def __init__(self,client): self.client=client

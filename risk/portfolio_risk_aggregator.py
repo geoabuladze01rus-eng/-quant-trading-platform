@@ -2,6 +2,8 @@
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
+
+
 class RiskState(str,Enum): APPROVED="APPROVED"; WARNING="WARNING"; BLOCKED="BLOCKED"
 @dataclass(frozen=True)
 class PortfolioRiskState:

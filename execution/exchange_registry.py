@@ -2,6 +2,8 @@
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import Any
+
+
 @dataclass(frozen=True)
 class VenueSnapshot:
     venue:str; available_qty:Decimal; executable_price:Decimal; fee_bps:Decimal; healthy:bool=True

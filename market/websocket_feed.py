@@ -1,7 +1,10 @@
 """Async WebSocket feed abstraction with reconnect/backoff and normalized callbacks."""
 import asyncio
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Awaitable,Callable,Any
+from typing import Any
+
+
 @dataclass(frozen=True)
 class FeedEvent:
     venue:str; channel:str; symbol:str; payload:Any; received_at_ms:int
@@ -14,7 +17,7 @@ class WebSocketFeed:
                 ws=await self.connect(); delay=self.backoff_initial
                 async for message in ws: await self.handle(message)
             except asyncio.CancelledError: raise
-            except Exception:
+            except Exception:  # noqa: BLE001 - reconnect on transport failures
                 if not self.running: break
                 await asyncio.sleep(delay); delay=min(self.backoff_max,delay*2)
     def stop(self): self.running=False

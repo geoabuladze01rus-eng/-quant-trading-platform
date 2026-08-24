@@ -1,6 +1,8 @@
 """Lightweight Engle-Granger style residual-stationarity gate for pair selection."""
 from dataclasses import dataclass
-from math import log,sqrt
+from math import log, sqrt
+
+
 @dataclass(frozen=True)
 class CointegrationResult:
     hedge_ratio:float; residual_mean:float; residual_std:float; half_life:float; stationary:bool; score:float

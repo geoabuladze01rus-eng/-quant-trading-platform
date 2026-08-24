@@ -1,11 +1,15 @@
 """Unified research pipeline for backtest, portfolio, metrics and stress analysis."""
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Any, Callable, Iterable
+from typing import Any
+
 from backtest.engine import BacktestEngine, BacktestEvent, BacktestResult
-from backtest.portfolio_simulator import PortfolioSimulator, PortfolioBacktestResult
-from backtest.stress_engine import StressEngine, StressScenario, StressResult
-from risk.metrics_engine import RiskMetricsEngine, RiskMetrics
+from backtest.portfolio_simulator import PortfolioBacktestResult, PortfolioSimulator
+from backtest.stress_engine import StressEngine, StressResult, StressScenario
+from risk.metrics_engine import RiskMetrics, RiskMetricsEngine
+
+
 @dataclass(frozen=True)
 class ResearchReport:
     backtest:BacktestResult
@@ -22,5 +26,5 @@ class ResearchPipeline:
             prior=equity; pnl=Decimal(str(trade.net)); equity+=pnl
             returns.append(pnl/prior if prior else Decimal(0))
         rm=self.metrics.calculate(returns)
-        sr=self.stress.run(scenarios,stress_runner) if stress_runner else tuple()
+        sr=self.stress.run(scenarios,stress_runner) if stress_runner else ()
         return ResearchReport(bt,pf,rm,sr)

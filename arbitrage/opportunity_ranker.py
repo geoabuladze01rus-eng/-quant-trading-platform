@@ -1,6 +1,8 @@
 """Risk-adjusted ranking of concurrent arbitrage opportunities."""
 from dataclasses import dataclass
 from decimal import Decimal
+
+
 @dataclass(frozen=True)
 class Candidate:
     id:str; net_edge_bps:Decimal; fill_probability:Decimal; liquidity_score:Decimal; latency_score:Decimal; hedge_risk:Decimal

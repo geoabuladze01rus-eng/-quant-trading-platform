@@ -1,5 +1,6 @@
 from market.ws_connection import ConnectionState, WebSocketLifecycle
 
+
 def test_stale_connection_enters_reconnecting():
     c = WebSocketLifecycle('BINANCE', stale_after_ms=1000)
     c.connected(1000)

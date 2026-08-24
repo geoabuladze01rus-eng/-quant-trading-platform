@@ -31,7 +31,7 @@ class SandboxOrder:
 @dataclass
 class SandboxAccount:
     account_id: str = field(default_factory=lambda: f"sandbox-{uuid4()}")
-    cash: Decimal = Decimal("0")
+    cash: Decimal = Decimal(0)
     orders: dict[str, SandboxOrder] = field(default_factory=dict)
     idempotency: dict[str, str] = field(default_factory=dict)
 

@@ -1,6 +1,8 @@
 """Central execution supervisor for deterministic failure containment."""
 from dataclasses import dataclass
 from enum import Enum
+
+
 class SupervisorState(str,Enum): READY="READY"; DEGRADED="DEGRADED"; HALTED="HALTED"
 @dataclass(frozen=True)
 class SupervisorDecision:

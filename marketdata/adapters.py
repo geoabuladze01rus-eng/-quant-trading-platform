@@ -1,8 +1,11 @@
 """Normalized market-data adapter interfaces for live/paper venues."""
+from collections.abc import Iterable
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Protocol, Iterable
+from typing import Protocol
+
 from strategies.inter_exchange_arbitrage import Quote
+
 
 @dataclass(frozen=True)
 class RawBookTicker:

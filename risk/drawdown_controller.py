@@ -1,7 +1,9 @@
 """Portfolio drawdown circuit breaker with explicit operating states."""
 from dataclasses import dataclass
-from enum import Enum
 from decimal import Decimal
+from enum import Enum
+
+
 class RiskState(str,Enum): NORMAL="NORMAL"; CAUTION="CAUTION"; REDUCE_ONLY="REDUCE_ONLY"; HALT="HALT"
 @dataclass(frozen=True)
 class DrawdownPolicy:
@@ -10,7 +12,7 @@ class DrawdownPolicy:
 class DrawdownDecision:
     state:RiskState; drawdown_pct:Decimal; allow_new_positions:bool; allow_reduce_only:bool; reason:str
 class DrawdownController:
-    def __init__(self,policy=DrawdownPolicy()): self.policy=policy; self.state=RiskState.NORMAL
+    def __init__(self,policy=None): self.policy=policy or DrawdownPolicy(); self.state=RiskState.NORMAL
     def evaluate(self,equity:Decimal,high_watermark:Decimal)->DrawdownDecision:
         equity=Decimal(str(equity)); high_watermark=Decimal(str(high_watermark))
         if high_watermark<=0: raise ValueError("high_watermark must be positive")

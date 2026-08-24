@@ -1,6 +1,8 @@
 """Execution-cost model for net arbitrage edge."""
 from dataclasses import dataclass
 from decimal import Decimal
+
+
 @dataclass(frozen=True)
 class CostEstimate:
     gross_edge_bps:Decimal; fees_bps:Decimal; slippage_bps:Decimal; fixed_cost_bps:Decimal; net_edge_bps:Decimal; executable:bool; reason:str

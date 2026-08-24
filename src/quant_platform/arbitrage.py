@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 
 from .domain import Quote, Venue
@@ -28,14 +28,14 @@ class ArbitrageOpportunity:
 
 @dataclass(frozen=True, slots=True)
 class ArbitrageScanner:
-    min_net_edge_bps: Decimal = Decimal("8")
-    taker_fee_bps: Decimal = Decimal("5")
-    expected_slippage_bps: Decimal = Decimal("2")
-    latency_buffer_bps: Decimal = Decimal("1")
+    min_net_edge_bps: Decimal = Decimal(8)
+    taker_fee_bps: Decimal = Decimal(5)
+    expected_slippage_bps: Decimal = Decimal(2)
+    latency_buffer_bps: Decimal = Decimal(1)
     max_quote_age_ms: int = 1500
 
     def _fresh(self, quote: Quote) -> bool:
-        age_ms = (datetime.now(timezone.utc) - quote.timestamp).total_seconds() * 1000
+        age_ms = (datetime.now(UTC) - quote.timestamp).total_seconds() * 1000
         return age_ms <= self.max_quote_age_ms
 
     def scan(self, quotes: list[Quote], quantity: Decimal) -> ArbitrageOpportunity | None:
@@ -50,8 +50,8 @@ class ArbitrageScanner:
                     continue
                 if buy.ask_size < quantity or sell.bid_size < quantity:
                     continue
-                gross_edge_bps = (sell.bid - buy.ask) / buy.ask * Decimal("10000")
-                fees_bps = self.taker_fee_bps * Decimal("2")
+                gross_edge_bps = (sell.bid - buy.ask) / buy.ask * Decimal(10000)
+                fees_bps = self.taker_fee_bps * Decimal(2)
                 net_edge_bps = gross_edge_bps - fees_bps - self.expected_slippage_bps - self.latency_buffer_bps
                 candidate = ArbitrageOpportunity(
                     symbol=buy.symbol,

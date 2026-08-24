@@ -1,7 +1,9 @@
 """Portfolio circuit breaker coordinating daily loss, drawdown and feed health."""
 from dataclasses import dataclass
-from enum import Enum
 from decimal import Decimal
+from enum import Enum
+
+
 class CircuitState(str,Enum): ARMED="ARMED"; TRIPPED="TRIPPED"; RECOVERY="RECOVERY"
 @dataclass(frozen=True)
 class CircuitDecision:

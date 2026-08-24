@@ -2,6 +2,8 @@
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
+
+
 class OrderEvent(str,Enum): NEW="NEW"; PARTIALLY_FILLED="PARTIALLY_FILLED"; FILLED="FILLED"; CANCELED="CANCELED"; REJECTED="REJECTED"; EXPIRED="EXPIRED"
 @dataclass(frozen=True)
 class ExecutionEvent:

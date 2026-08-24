@@ -2,11 +2,13 @@
 from dataclasses import dataclass
 from decimal import Decimal
 from math import sqrt
+
+
 @dataclass(frozen=True)
 class RiskMetrics:
     mean:Decimal; volatility:Decimal; sharpe:Decimal; sortino:Decimal; max_drawdown:Decimal; profit_factor:Decimal; observations:int
 class RiskMetricsEngine:
-    def calculate(self,returns:list[Decimal],annualization=Decimal("365"),risk_free=Decimal("0"))->RiskMetrics:
+    def calculate(self,returns:list[Decimal],annualization=Decimal(365),risk_free=Decimal(0))->RiskMetrics:
         xs=[float(Decimal(str(x))) for x in returns]
         n=len(xs)
         if n<2:return RiskMetrics(Decimal(0),Decimal(0),Decimal(0),Decimal(0),Decimal(0),Decimal(0),n)

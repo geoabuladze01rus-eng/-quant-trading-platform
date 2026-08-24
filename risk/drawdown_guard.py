@@ -2,12 +2,14 @@
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
+
+
 class GuardState(str,Enum): NORMAL="NORMAL"; WARNING="WARNING"; HALTED="HALTED"
 @dataclass(frozen=True)
 class GuardDecision:
     state:GuardState; allow_new_orders:bool; cancel_orders:bool; reason:str
 class DrawdownGuard:
-    def __init__(self,daily_loss_limit_pct=Decimal("2"),max_drawdown_pct=Decimal("10"),warning_pct=Decimal("1")):
+    def __init__(self,daily_loss_limit_pct=Decimal(2),max_drawdown_pct=Decimal(10),warning_pct=Decimal(1)):
         self.daily=Decimal(str(daily_loss_limit_pct)); self.max_dd=Decimal(str(max_drawdown_pct)); self.warning=Decimal(str(warning_pct))
     def evaluate(self,equity,day_start_equity,peak_equity)->GuardDecision:
         e=Decimal(str(equity)); d=Decimal(str(day_start_equity)); p=Decimal(str(peak_equity))

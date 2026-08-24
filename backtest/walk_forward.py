@@ -1,6 +1,9 @@
 """Leakage-resistant walk-forward evaluation with train/validation/OOS windows."""
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from typing import Any, Callable, Sequence
+from typing import Any
+
+
 @dataclass(frozen=True)
 class WalkForwardWindow:
     train:tuple[Any,...]; validation:tuple[Any,...]; test:tuple[Any,...]

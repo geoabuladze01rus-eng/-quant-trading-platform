@@ -1,6 +1,8 @@
 """Reject fragile or stale arbitrage signals before risk/execution."""
 from dataclasses import dataclass
 from decimal import Decimal
+
+
 @dataclass(frozen=True)
 class SignalQuality:
     approved:bool; score:Decimal; reason:str

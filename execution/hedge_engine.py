@@ -1,6 +1,8 @@
 """Residual-exposure hedge selector."""
 from dataclasses import dataclass
 from decimal import Decimal
+
+
 @dataclass(frozen=True)
 class HedgeCandidate:
     venue:str; instrument:str; liquidity_score:Decimal; latency_ms:int; fee_bps:Decimal; slippage_bps:Decimal; hedge_capacity:Decimal
@@ -8,7 +10,7 @@ class HedgeCandidate:
 class HedgeDecision:
     venue:str; instrument:str; quantity:Decimal; score:Decimal; approved:bool; reason:str
 class HedgeEngine:
-    def select(self,residual_qty:Decimal,candidates:list[HedgeCandidate],max_slippage_bps:Decimal=Decimal("20"))->HedgeDecision:
+    def select(self,residual_qty:Decimal,candidates:list[HedgeCandidate],max_slippage_bps:Decimal=Decimal(20))->HedgeDecision:
         qty=Decimal(str(residual_qty)); best=None
         for c in candidates:
             cap=Decimal(str(c.hedge_capacity)); slip=Decimal(str(c.slippage_bps)); liq=Decimal(str(c.liquidity_score))

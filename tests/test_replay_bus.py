@@ -1,5 +1,6 @@
 from marketdata.replay_bus import MarketDataBus
 
+
 def test_bus_delivers_only_when_connected():
     received = []
     bus = MarketDataBus()

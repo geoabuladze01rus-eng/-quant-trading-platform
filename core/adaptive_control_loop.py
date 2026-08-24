@@ -1,7 +1,13 @@
 """Closed-loop controller connecting strategy health and macro risk."""
 from dataclasses import dataclass
 from decimal import Decimal
-from intelligence.adaptive_strategy_manager import AdaptiveStrategyManager, StrategyStats, StrategyDecision
+
+from intelligence.adaptive_strategy_manager import (
+    AdaptiveStrategyManager,
+    StrategyDecision,
+    StrategyStats,
+)
+
 
 @dataclass(frozen=True)
 class MacroRisk:
@@ -25,4 +31,4 @@ class AdaptiveControlLoop:
         final_multiplier = strategy.risk_multiplier * macro.multiplier
         allowed = strategy.state.value not in {"QUARANTINE", "DISABLED"} and macro.multiplier > 0 and final_multiplier > 0
         reason = strategy.reason if allowed else (macro.reason or strategy.reason)
-        return ControlDecision(strategy, final_multiplier if allowed else Decimal("0"), allowed, reason)
+        return ControlDecision(strategy, final_multiplier if allowed else Decimal(0), allowed, reason)

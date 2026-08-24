@@ -1,6 +1,8 @@
 """Portfolio-wide exposure aggregation across venues, assets and strategies."""
 from dataclasses import dataclass
 from decimal import Decimal
+
+
 @dataclass(frozen=True)
 class Exposure:
     venue:str; asset:str; strategy:str; notional:Decimal

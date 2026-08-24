@@ -36,7 +36,7 @@ class TInvestConnector(VenueConnector):
     @staticmethod
     def _money(value: dict[str, object]) -> Decimal:
         units = Decimal(str(value.get("units", "0")))
-        nano = Decimal(str(value.get("nano", "0"))) / Decimal("1000000000")
+        nano = Decimal(str(value.get("nano", "0"))) / Decimal(1000000000)
         return units + nano
 
     async def _post(self, service_method: str, payload: dict[str, object]) -> dict:
@@ -73,7 +73,7 @@ class TInvestConnector(VenueConnector):
         if rub_amount <= 0:
             raise ValueError("rub_amount must be positive")
         units = int(rub_amount)
-        nano = int((rub_amount - units) * Decimal("1000000000"))
+        nano = int((rub_amount - units) * Decimal(1000000000))
         return await self._post(
             "tinkoff.public.invest.api.contract.v1.SandboxService/SandboxPayIn",
             {"accountId": account_id, "amount": {"currency": "rub", "units": str(units), "nano": nano}},

@@ -1,14 +1,16 @@
 """Route prioritized events into market state and risk intelligence."""
 from dataclasses import dataclass, field
 from decimal import Decimal
+
 from core.event_bus import EventBus, EventPriority, PrioritizedEvent
-from intelligence.event_impact_engine import EventImpactEngine, ImpactDirection, EventImpact
+from intelligence.event_impact_engine import EventImpact, EventImpactEngine, ImpactDirection
+
 
 @dataclass
 class MarketState:
     prices: dict[str, Decimal] = field(default_factory=dict)
     volatility: dict[str, Decimal] = field(default_factory=dict)
-    risk_multiplier: Decimal = Decimal("1")
+    risk_multiplier: Decimal = Decimal(1)
     last_impacts: list[EventImpact] = field(default_factory=list)
 
 class MarketEventRouter:

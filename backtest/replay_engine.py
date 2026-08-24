@@ -1,7 +1,8 @@
 """Deterministic market-event replay engine for backtests and paper validation."""
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Callable, Iterable
+
 
 @dataclass(frozen=True)
 class MarketEvent:

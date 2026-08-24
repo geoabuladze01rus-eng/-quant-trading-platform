@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from math import sqrt
 
+
 @dataclass(frozen=True)
 class BacktestMetrics:
     total_pnl: Decimal
@@ -17,7 +18,7 @@ class BacktestMetrics:
 
 class MetricsCalculator:
     @staticmethod
-    def calculate(pnls, initial_equity=Decimal("100000")):
+    def calculate(pnls, initial_equity=Decimal(100000)):
         xs=[Decimal(str(x)) for x in pnls]
         if initial_equity <= 0: raise ValueError("initial_equity must be positive")
         if not xs: return BacktestMetrics(Decimal(0),0,0,0,Decimal(0),Decimal(0),Decimal(0),Decimal(0),Decimal(0))

@@ -1,5 +1,12 @@
 from decimal import Decimal
-from strategies.adaptive_regime import MarketSnapshot,MarketRegime,RegimeClassifier,AdaptiveProfileSelector
+
+from strategies.adaptive_regime import (
+    AdaptiveProfileSelector,
+    MarketRegime,
+    MarketSnapshot,
+    RegimeClassifier,
+)
+
 
 def s(v,liq,tr,sp): return MarketSnapshot(Decimal(str(v)),Decimal(str(liq)),Decimal(str(tr)),Decimal(str(sp)))
 def test_regimes():

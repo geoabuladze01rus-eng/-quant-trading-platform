@@ -1,6 +1,9 @@
 """Durable-style event journal abstraction with idempotent event application."""
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable,Any
+from typing import Any
+
+
 @dataclass(frozen=True)
 class JournalRecord:
     event_id:str; sequence:int; payload:Any

@@ -1,7 +1,9 @@
 """Shared retry, backoff and rate-limit policy for exchange adapters."""
+from collections.abc import Callable
 from dataclasses import dataclass
 from random import uniform
-from typing import Callable,TypeVar
+from typing import TypeVar
+
 T=TypeVar("T")
 @dataclass(frozen=True)
 class RetryPolicy:

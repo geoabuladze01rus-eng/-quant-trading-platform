@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 
 from .domain import Quote, Venue
@@ -26,7 +26,7 @@ class MarketDataStore:
         return [q for (venue, pair), q in self.quotes.items() if pair == symbol]
 
     def is_fresh(self, quote: Quote, max_age_ms: int = 1500) -> bool:
-        age_ms = (datetime.now(timezone.utc) - quote.timestamp).total_seconds() * 1000
+        age_ms = (datetime.now(UTC) - quote.timestamp).total_seconds() * 1000
         return age_ms <= max_age_ms
 
 

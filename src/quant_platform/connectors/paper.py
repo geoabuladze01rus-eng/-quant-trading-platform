@@ -21,4 +21,4 @@ class PaperVenueConnector(VenueConnector):
         return quote
 
     async def get_balance(self, asset: str) -> Decimal:
-        return self._balances.get(asset, Decimal("0"))
+        return self._balances.get(asset, Decimal(0))

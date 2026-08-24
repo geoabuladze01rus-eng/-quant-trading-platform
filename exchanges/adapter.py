@@ -1,7 +1,9 @@
 """Provider-neutral exchange adapter contract."""
 from abc import ABC, abstractmethod
 from decimal import Decimal
-from .models import NormalizedBalance, NormalizedPosition, NormalizedOrder, OrderSide
+
+from .models import NormalizedBalance, NormalizedOrder, NormalizedPosition, OrderSide
+
 
 class ExchangeAdapter(ABC):
     venue: str

@@ -2,6 +2,8 @@
 from dataclasses import dataclass
 from decimal import Decimal
 from itertools import permutations
+
+
 @dataclass(frozen=True)
 class Opportunity:
     symbol:str; buy_venue:str; sell_venue:str; quantity:Decimal; buy_price:Decimal; sell_price:Decimal; net_edge_bps:Decimal

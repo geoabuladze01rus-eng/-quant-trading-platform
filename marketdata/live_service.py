@@ -1,10 +1,12 @@
 """Live quote pipeline for paper-mode monitoring."""
 from dataclasses import dataclass
+
 from marketdata.adapters import BinanceAdapter, BybitAdapter, OKXAdapter, RawBookTicker
 from marketdata.quality_guard import QuoteQualityGuard
 from marketdata.replay_bus import MarketDataBus
 from marketdata.ws_clients import BookTickerParser
 from strategies.inter_exchange_arbitrage import InterExchangeArbitrage, Quote
+
 
 @dataclass(frozen=True)
 class PaperOpportunity:

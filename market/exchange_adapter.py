@@ -1,8 +1,10 @@
 """Normalized exchange/broker data contract. Concrete adapters plug into this interface."""
+from collections.abc import Iterable
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
-from typing import Protocol, Iterable
+from typing import Protocol
+
 
 class Side(str, Enum):
     BUY = "BUY"

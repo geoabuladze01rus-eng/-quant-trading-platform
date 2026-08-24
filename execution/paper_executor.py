@@ -4,6 +4,7 @@ from decimal import Decimal
 from enum import Enum
 from time import time_ns
 
+
 class Side(str, Enum):
     BUY = "BUY"
     SELL = "SELL"
@@ -21,7 +22,7 @@ class PaperOrder:
 class PaperPortfolio:
     cash: Decimal
     positions: dict[str, Decimal] = field(default_factory=dict)
-    realized_pnl: Decimal = Decimal("0")
+    realized_pnl: Decimal = Decimal(0)
 
 class PaperExecutor:
     def __init__(self, initial_cash: Decimal):
@@ -33,7 +34,7 @@ class PaperExecutor:
         if quantity <= 0 or price <= 0:
             raise ValueError("quantity and price must be positive")
         notional = quantity * price
-        position = self.portfolio.positions.get(symbol, Decimal("0"))
+        position = self.portfolio.positions.get(symbol, Decimal(0))
         if side is Side.BUY:
             if notional > self.portfolio.cash:
                 raise ValueError("insufficient paper cash")

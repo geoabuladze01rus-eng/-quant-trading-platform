@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 import time
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 
 from .arbitrage import ArbitrageScanner
@@ -26,7 +26,7 @@ class QuoteCache:
         self.quotes[(quote.venue, quote.symbol)] = quote
 
     def snapshot(self, symbol: str, venues: tuple[Venue, ...], max_age_ms: int) -> list[Quote]:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         result: list[Quote] = []
         for venue in venues:
             quote = self.quotes.get((venue, symbol))
@@ -45,7 +45,7 @@ class RealtimePaperArbitrage:
     symbol: str = "BTCUSDT"
     venues: tuple[Venue, ...] = (Venue.BINANCE, Venue.BYBIT, Venue.OKX)
     quantity: Decimal = Decimal("0.001")
-    portfolio_value: Decimal = Decimal("100000")
+    portfolio_value: Decimal = Decimal(100000)
     decision_cooldown_seconds: float = 2.0
     scanner: ArbitrageScanner = field(default_factory=ArbitrageScanner)
     risk: RiskEngine = field(default_factory=RiskEngine)

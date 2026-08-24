@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from unittest.mock import patch
 
@@ -14,9 +14,9 @@ def quote(venue: Venue, bid: str, ask: str, seconds_ago: float = 0) -> Quote:
         symbol="BTCUSDT",
         bid=Decimal(bid),
         ask=Decimal(ask),
-        bid_size=Decimal("1"),
-        ask_size=Decimal("1"),
-        timestamp=datetime.now(timezone.utc) - timedelta(seconds=seconds_ago),
+        bid_size=Decimal(1),
+        ask_size=Decimal(1),
+        timestamp=datetime.now(UTC) - timedelta(seconds=seconds_ago),
     )
 
 
@@ -52,5 +52,5 @@ def test_runtime_waits_for_two_venues_before_pipeline() -> None:
 
     assert len(calls) == 1
     assert {item.venue for item in calls[0][0]} == {Venue.BINANCE, Venue.BYBIT}
-    assert calls[0][1] == Decimal("100000")
+    assert calls[0][1] == Decimal(100000)
     assert calls[0][2] == Decimal("0.001")

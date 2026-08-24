@@ -66,7 +66,7 @@ class WebSocketCollector(ABC):
                     await self._consume(websocket)
             except asyncio.CancelledError:
                 raise
-            except Exception:
+            except Exception:  # noqa: BLE001 - reconnect on WebSocket failures
                 self._stats = CollectorStats(
                     self._stats.messages,
                     self._stats.reconnects + 1,
@@ -137,7 +137,7 @@ class BybitTickerCollector(WebSocketCollector):
                 backoff = 1.0
             except asyncio.CancelledError:
                 raise
-            except Exception:
+            except Exception:  # noqa: BLE001 - reconnect on WebSocket failures
                 self._stats = CollectorStats(
                     self._stats.messages,
                     self._stats.reconnects + 1,
@@ -185,7 +185,7 @@ class OKXTickerCollector(WebSocketCollector):
                 backoff = 1.0
             except asyncio.CancelledError:
                 raise
-            except Exception:
+            except Exception:  # noqa: BLE001 - reconnect on WebSocket failures
                 self._stats = CollectorStats(
                     self._stats.messages,
                     self._stats.reconnects + 1,

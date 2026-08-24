@@ -1,5 +1,7 @@
 import pytest
+
 from execution.trade_state_machine import TradeState, TradeStateMachine
+
 
 def test_normal_two_leg_flow():
     sm = TradeStateMachine()

@@ -1,6 +1,7 @@
 """Hysteresis filter preventing regime flapping on noisy inputs."""
 from dataclasses import dataclass
 
+
 @dataclass(frozen=True)
 class RegimeState:
     regime: str

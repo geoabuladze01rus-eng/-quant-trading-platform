@@ -2,6 +2,7 @@
 from dataclasses import dataclass
 from decimal import Decimal
 
+
 @dataclass(frozen=True)
 class OrderBookSnapshot:
     bid: Decimal
@@ -20,7 +21,7 @@ class SimulatedFill:
     latency_ms: int
 
 class RealisticExecutionSimulator:
-    def __init__(self, fee_bps: Decimal = Decimal("10"), latency_ms: int = 50):
+    def __init__(self, fee_bps: Decimal = Decimal(10), latency_ms: int = 50):
         self.fee_bps = fee_bps
         self.latency_ms = latency_ms
 
@@ -35,8 +36,8 @@ class RealisticExecutionSimulator:
         available = book.ask_qty if side == "BUY" else book.bid_qty
         filled = min(quantity, available)
         price = book.ask if side == "BUY" else book.bid
-        mid = (book.bid + book.ask) / Decimal("2")
-        slippage_bps = abs(price - mid) / mid * Decimal("10000")
+        mid = (book.bid + book.ask) / Decimal(2)
+        slippage_bps = abs(price - mid) / mid * Decimal(10000)
         notional = filled * price
-        fee = notional * self.fee_bps / Decimal("10000")
+        fee = notional * self.fee_bps / Decimal(10000)
         return SimulatedFill(quantity, filled, price, fee, slippage_bps, self.latency_ms)

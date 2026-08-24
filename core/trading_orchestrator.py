@@ -1,14 +1,16 @@
 """Coordinates validated opportunity, inventory, risk and paper execution."""
 from dataclasses import dataclass
 from decimal import Decimal
+
 from execution.trade_state_machine import TradeState, TradeStateMachine
+
 
 @dataclass(frozen=True)
 class ExecutionResult:
     approved: bool
     reason: str
     state: TradeState
-    pnl: Decimal = Decimal("0")
+    pnl: Decimal = Decimal(0)
 
 class TradingOrchestrator:
     def __init__(self, risk, inventory, execution):

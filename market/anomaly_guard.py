@@ -1,6 +1,8 @@
 """Anomaly and bad-quote guard for real-time arbitrage decisions."""
 from dataclasses import dataclass
 from decimal import Decimal
+
+
 @dataclass(frozen=True)
 class AnomalyResult:
     score:Decimal; stale:bool; crossed:bool; outlier:bool; allowed:bool; reason:str

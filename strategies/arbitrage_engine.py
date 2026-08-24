@@ -1,7 +1,7 @@
 """Spot cross-venue arbitrage opportunity calculator."""
 from dataclasses import dataclass
 from decimal import Decimal
-from market.normalized_orderbook import NormalizedOrderBook
+
 
 @dataclass(frozen=True)
 class ArbitrageOpportunity:
@@ -28,10 +28,10 @@ class ArbitrageEngine:
         if qty <= 0: return None
         buy_price, sell_price = buy.best_ask.price, sell.best_bid.price
         gross = (sell_price - buy_price) * qty
-        fees = (buy_price + sell_price) * qty * fee_bps / Decimal('10000')
-        slippage = (buy_price + sell_price) * qty * slippage_bps / Decimal('10000')
+        fees = (buy_price + sell_price) * qty * fee_bps / Decimal(10000)
+        slippage = (buy_price + sell_price) * qty * slippage_bps / Decimal(10000)
         net = gross - fees - slippage
         invested = buy_price * qty
-        ret = net / invested if invested else Decimal('0')
+        ret = net / invested if invested else Decimal(0)
         if ret < self.min_net_return: return None
         return ArbitrageOpportunity(buy.venue, sell.venue, buy.symbol, qty, buy_price, sell_price, sell_price-buy_price, fees, slippage, net, ret)

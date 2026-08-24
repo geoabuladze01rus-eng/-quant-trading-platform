@@ -1,7 +1,8 @@
 """Pure parsers for normalized market data from Binance/Bybit/OKX payloads.
 Network/WebSocket transport is intentionally kept separate.
 """
-from market.normalized_orderbook import OrderBookNormalizer, NormalizedOrderBook
+from market.normalized_orderbook import NormalizedOrderBook, OrderBookNormalizer
+
 
 class BinanceAdapter:
     venue = "BINANCE"

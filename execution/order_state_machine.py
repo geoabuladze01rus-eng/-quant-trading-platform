@@ -1,5 +1,7 @@
 """Deterministic order lifecycle state machine."""
 from enum import Enum
+
+
 class OrderState(str,Enum): NEW="NEW"; SUBMITTED="SUBMITTED"; PARTIAL="PARTIAL"; FILLED="FILLED"; CANCELLED="CANCELLED"; FAILED="FAILED"; HEDGED="HEDGED"
 _TRANSITIONS={OrderState.NEW:{OrderState.SUBMITTED,OrderState.FAILED},OrderState.SUBMITTED:{OrderState.PARTIAL,OrderState.FILLED,OrderState.CANCELLED,OrderState.FAILED},OrderState.PARTIAL:{OrderState.PARTIAL,OrderState.FILLED,OrderState.CANCELLED,OrderState.FAILED,OrderState.HEDGED},OrderState.FAILED:{OrderState.HEDGED},OrderState.CANCELLED:{OrderState.HEDGED},OrderState.FILLED:set(),OrderState.HEDGED:set()}
 class OrderStateMachine:

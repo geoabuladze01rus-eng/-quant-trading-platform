@@ -1,15 +1,17 @@
 """Deterministic event-driven backtesting primitives."""
+from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
-from typing import Iterable, Protocol
+from typing import Protocol
+
 
 @dataclass(frozen=True)
 class Bar:
     timestamp: datetime
     bid: Decimal
     ask: Decimal
-    volume: Decimal = Decimal("0")
+    volume: Decimal = Decimal(0)
 
 @dataclass(frozen=True)
 class BacktestOrder:
@@ -35,7 +37,7 @@ class BacktestEngine:
         self.cash = starting_cash
         self.fee_rate = fee_rate
         self.slippage_bps = slippage_bps
-        self.position = Decimal("0")
+        self.position = Decimal(0)
         self.fills: list[BacktestFill] = []
 
     def run(self, bars: Iterable[Bar], strategy: Strategy) -> list[BacktestFill]:
@@ -47,14 +49,14 @@ class BacktestEngine:
                 if bar.ask > order.limit_price:
                     continue
                 raw = bar.ask
-                price = raw * (Decimal("1") + self.slippage_bps / Decimal("10000"))
+                price = raw * (Decimal(1) + self.slippage_bps / Decimal(10000))
                 cash_delta = -(order.quantity * price)
                 self.position += order.quantity
             elif order.side == "SELL":
                 if bar.bid < order.limit_price:
                     continue
                 raw = bar.bid
-                price = raw * (Decimal("1") - self.slippage_bps / Decimal("10000"))
+                price = raw * (Decimal(1) - self.slippage_bps / Decimal(10000))
                 cash_delta = order.quantity * price
                 self.position -= order.quantity
             else:

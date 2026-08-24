@@ -1,7 +1,8 @@
 """Controlled recovery after a portfolio risk-off event."""
 from dataclasses import dataclass
-from decimal import Decimal
 from enum import Enum
+
+
 class RecoveryState(str,Enum): LOCKED="LOCKED"; COOLDOWN="COOLDOWN"; PROBATION="PROBATION"; ACTIVE="ACTIVE"
 @dataclass(frozen=True)
 class RecoveryDecision:

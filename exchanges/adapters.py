@@ -1,7 +1,8 @@
 """Concrete venue adapters: transport-independent skeletons for Binance, Bybit and OKX."""
-from exchanges.base import ExchangeAdapter,OrderRequest,OrderSnapshot,Side,OrderStatus
+from exchanges.base import ExchangeAdapter
 from exchanges.resilience import ExchangeResilience
-from decimal import Decimal
+
+
 class HttpTransport:
     async def request(self,*args,**kwargs): raise NotImplementedError("bind authenticated venue transport")
 class BaseAdapter(ExchangeAdapter):
@@ -12,7 +13,8 @@ class BaseAdapter(ExchangeAdapter):
     async def get_balance(self,asset): raise NotImplementedError
     async def health(self):
         try:return bool(await self.transport.request("health"))
-        except Exception:return False
+        except Exception:  # noqa: BLE001 - health checks fail closed on transport errors
+            return False
 class BinanceAdapter(BaseAdapter):
     @property
     def venue(self):return "binance"

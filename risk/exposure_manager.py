@@ -1,6 +1,8 @@
 """Portfolio exposure limits by asset, venue, strategy and correlated group."""
 from dataclasses import dataclass
 from decimal import Decimal
+
+
 @dataclass(frozen=True)
 class Exposure:
     asset:str; venue:str; strategy:str; notional:Decimal; group:str|None=None

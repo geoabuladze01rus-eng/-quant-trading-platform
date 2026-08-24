@@ -1,6 +1,7 @@
 """Walk-forward validation: sequential train/validation/test windows."""
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Sequence, TypeVar
+from typing import TypeVar
 
 T = TypeVar("T")
 
@@ -11,7 +12,7 @@ class WalkForwardWindow:
     test: Sequence[T]
 
 
-def windows(data: Sequence[T], train_size: int, validation_size: int, test_size: int, step: int | None = None) -> list[WalkForwardWindow]:
+def windows[T](data: Sequence[T], train_size: int, validation_size: int, test_size: int, step: int | None = None) -> list[WalkForwardWindow]:
     if min(train_size, validation_size, test_size) <= 0:
         raise ValueError("window sizes must be positive")
     step = step or test_size

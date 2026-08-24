@@ -1,6 +1,8 @@
 """Portfolio-level state simulator for historical arbitrage results."""
 from dataclasses import dataclass
 from decimal import Decimal
+
+
 @dataclass(frozen=True)
 class EquityPoint:
     timestamp_ms:int; equity:Decimal; pnl:Decimal; drawdown:Decimal
@@ -8,7 +10,7 @@ class EquityPoint:
 class PortfolioBacktestResult:
     initial_equity:Decimal; final_equity:Decimal; net_pnl:Decimal; max_drawdown:Decimal; points:tuple[EquityPoint,...]
 class PortfolioSimulator:
-    def __init__(self,initial_equity=Decimal("100000")):
+    def __init__(self,initial_equity=Decimal(100000)):
         self.initial=Decimal(str(initial_equity))
     def run(self,trades)->PortfolioBacktestResult:
         equity=self.initial; peak=equity; max_dd=Decimal(0); points=[]

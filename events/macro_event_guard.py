@@ -1,6 +1,8 @@
 """Risk-first guard for scheduled macro/news events."""
 from dataclasses import dataclass
 from enum import Enum
+
+
 class EventImpact(str,Enum): LOW="LOW"; MEDIUM="MEDIUM"; HIGH="HIGH"; CRITICAL="CRITICAL"
 @dataclass(frozen=True)
 class MacroEvent: event_id:str; timestamp_ms:int; impact:EventImpact; title:str

@@ -1,5 +1,6 @@
 from core.event_bus import EventBus, EventPriority
 
+
 def test_critical_event_precedes_normal():
     bus = EventBus()
     bus.publish('ticker', {}, EventPriority.NORMAL)

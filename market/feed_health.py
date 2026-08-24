@@ -1,5 +1,7 @@
 """Feed health monitor: freshness, heartbeat and latency gates."""
 from dataclasses import dataclass
+
+
 @dataclass(frozen=True)
 class FeedHealth:
     venue:str; connected:bool; fresh:bool; latency_ms:int; healthy:bool; reason:str

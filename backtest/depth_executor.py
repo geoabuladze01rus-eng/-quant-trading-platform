@@ -1,7 +1,9 @@
 """Depth-aware historical execution for two-leg arbitrage backtests."""
+from collections.abc import Iterable
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Iterable
+
+
 @dataclass(frozen=True)
 class Level:
     price:Decimal; quantity:Decimal

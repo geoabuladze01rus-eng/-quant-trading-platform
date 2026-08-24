@@ -1,11 +1,14 @@
 """Single decision pipeline with anomaly, cost and portfolio-risk gates."""
 from dataclasses import dataclass
 from decimal import Decimal
+
 from arbitrage.opportunity_engine import Opportunity, OpportunityEngine
-from execution.cost_model import ExecutionCosts, ExecutionCostModel
-from risk.exposure_guard import ExposureGuard, ExposureLimits, ExposureSnapshot
-from risk.drawdown_controller import DrawdownController
+from execution.cost_model import ExecutionCostModel, ExecutionCosts
 from market.anomaly_guard import AnomalyGuard
+from risk.drawdown_controller import DrawdownController
+from risk.exposure_guard import ExposureGuard, ExposureLimits, ExposureSnapshot
+
+
 @dataclass(frozen=True)
 class PipelineDecision:
     accepted:bool; net_edge_bps:Decimal; reason:str; risk_state:str

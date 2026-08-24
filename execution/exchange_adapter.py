@@ -3,6 +3,8 @@ from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
 from typing import Protocol
+
+
 class OrderSide(str,Enum): BUY="BUY"; SELL="SELL"
 class OrderType(str,Enum): LIMIT="LIMIT"; MARKET="MARKET"
 @dataclass(frozen=True)

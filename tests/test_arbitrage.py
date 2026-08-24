@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 
 from quant_platform.arbitrage import ArbitrageScanner
@@ -11,14 +11,14 @@ def q(venue: Venue, bid: str, ask: str) -> Quote:
         symbol="BTCUSDT",
         bid=Decimal(bid),
         ask=Decimal(ask),
-        bid_size=Decimal("1"),
-        ask_size=Decimal("1"),
-        timestamp=datetime.now(timezone.utc),
+        bid_size=Decimal(1),
+        ask_size=Decimal(1),
+        timestamp=datetime.now(UTC),
     )
 
 
 def test_scanner_finds_net_profitable_spread() -> None:
-    scanner = ArbitrageScanner(min_net_edge_bps=Decimal("5"))
+    scanner = ArbitrageScanner(min_net_edge_bps=Decimal(5))
     opportunity = scanner.scan(
         [q(Venue.BINANCE, "100000", "100001"), q(Venue.BYBIT, "100250", "100251")],
         Decimal("0.01"),
@@ -27,11 +27,11 @@ def test_scanner_finds_net_profitable_spread() -> None:
     assert opportunity is not None
     assert opportunity.buy_venue == Venue.BINANCE
     assert opportunity.sell_venue == Venue.BYBIT
-    assert opportunity.net_edge_bps > Decimal("5")
+    assert opportunity.net_edge_bps > Decimal(5)
 
 
 def test_scanner_ignores_unprofitable_spread() -> None:
-    scanner = ArbitrageScanner(min_net_edge_bps=Decimal("5"))
+    scanner = ArbitrageScanner(min_net_edge_bps=Decimal(5))
     opportunity = scanner.scan(
         [q(Venue.BINANCE, "100000", "100010"), q(Venue.BYBIT, "100010", "100020")],
         Decimal("0.01"),

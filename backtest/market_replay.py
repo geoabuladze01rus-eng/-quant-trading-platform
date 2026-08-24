@@ -1,6 +1,7 @@
 """Deterministic event-time market replay for backtests and paper trading."""
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
-from typing import Iterable, Callable
+
 
 @dataclass(frozen=True)
 class MarketEvent:
@@ -11,7 +12,7 @@ class MarketEvent:
 
 class MarketReplay:
     def __init__(self, events: Iterable[MarketEvent]):
-        self.events = sorted(list(events), key=lambda e: e.timestamp_ms)
+        self.events = sorted(events, key=lambda e: e.timestamp_ms)
 
     def run(self, on_event: Callable[[MarketEvent], None], start_ms=None, end_ms=None):
         for event in self.events:

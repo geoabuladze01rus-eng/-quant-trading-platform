@@ -1,7 +1,10 @@
 """Order-book depth execution estimator with slippage and fillability gates."""
 from dataclasses import dataclass
 from decimal import Decimal
+
 from market.data_aggregator import BookLevel
+
+
 @dataclass(frozen=True)
 class DepthEstimate:
     requested_qty:Decimal; executable_qty:Decimal; average_price:Decimal; slippage_bps:Decimal; fully_executable:bool

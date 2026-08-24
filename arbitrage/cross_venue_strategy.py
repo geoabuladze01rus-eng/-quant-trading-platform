@@ -3,11 +3,12 @@
 The strategy is deliberately execution-agnostic: it produces a fully risk-gated
 TradeIntent, while the execution layer remains responsible for submitting orders.
 """
+from collections.abc import Iterable
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Iterable
 
-from arbitrage.opportunity_scanner import OpportunityScanner, Opportunity
+from arbitrage.opportunity_scanner import Opportunity
+
 
 @dataclass(frozen=True)
 class StrategyConfig:
@@ -18,8 +19,8 @@ class StrategyConfig:
     max_book_imbalance: Decimal
     trade_pct: Decimal
     asset_pct: Decimal
-    target_volatility: Decimal = Decimal("0")
-    volatility_cap: Decimal = Decimal("1")
+    target_volatility: Decimal = Decimal(0)
+    volatility_cap: Decimal = Decimal(1)
 
 @dataclass(frozen=True)
 class TradeIntent:
@@ -43,7 +44,7 @@ class CrossVenueArbitrageStrategy:
                  market_age_ms: int, spread_bps: Decimal,
                  book_imbalance: Decimal, volatility: Decimal,
                  observations: dict[str, int], exposures: list, exposure_factory):
-        opportunities = self.scanner.scan(books, Decimal("1"), fees, config.min_edge_bps)
+        opportunities = self.scanner.scan(books, Decimal(1), fees, config.min_edge_bps)
         intents = []
         for opp in opportunities:
             stats = self.persistence.observe(

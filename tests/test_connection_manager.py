@@ -1,5 +1,6 @@
 from market.connection_manager import ConnectionManager, ConnectionState
 
+
 def test_stale_detection_and_reconnect():
     m = ConnectionManager(stale_after_ms=1000)
     m.connecting(); m.connected(1000)
