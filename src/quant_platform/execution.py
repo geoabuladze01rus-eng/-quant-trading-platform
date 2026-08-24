@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from decimal import Decimal
 
 from .domain import OrderIntent
 from .execution_orchestrator import ExecutionOrchestrator
@@ -51,3 +52,31 @@ class PaperExecutionEngine:
             }
         )
         return result
+
+    def process_fill(
+        self,
+        execution_id: str,
+        *,
+        fill_id: str,
+        quantity: Decimal,
+        price: Decimal,
+    ) -> dict[str, str]:
+        event = self.orchestrator.process_fill(
+            execution_id,
+            fill_id=fill_id,
+            quantity=quantity,
+            price=price,
+        )
+        return {
+            "execution_id": execution_id,
+            "event_id": event.event_id,
+            "fill_id": event.fill_id or "",
+            "state": event.state.value,
+            "fill_quantity": str(event.fill_quantity),
+            "fill_price": str(event.fill_price),
+            "cumulative_filled_quantity": str(event.cumulative_filled_quantity),
+            "remaining_quantity": str(event.remaining_quantity),
+            "average_fill_price": str(event.average_fill_price),
+            "correlation_id": event.correlation_id or "",
+            "execution_group_id": event.execution_group_id or "",
+        }

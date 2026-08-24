@@ -35,6 +35,14 @@ class InvalidExecutionTransition(ValueError):
     """Raised when an execution attempts to skip or leave a terminal state."""
 
 
+class InvalidFillError(ValueError):
+    """Raised when a fill cannot be applied to an execution safely."""
+
+
+class ConflictingFillError(InvalidFillError):
+    """Raised when a fill identifier is reused with different economics."""
+
+
 @dataclass(frozen=True, slots=True)
 class ExecutionEvent:
     event_id: str
@@ -48,6 +56,31 @@ class ExecutionEvent:
     quantity: Decimal | None = None
     correlation_id: str | None = None
     execution_group_id: str | None = None
+    fill_id: str | None = None
+    fill_quantity: Decimal | None = None
+    fill_price: Decimal | None = None
+    cumulative_filled_quantity: Decimal | None = None
+    remaining_quantity: Decimal | None = None
+    average_fill_price: Decimal | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class ExecutionSnapshot:
+    execution_id: str
+    state: ExecutionState
+    requested_quantity: Decimal
+    filled_quantity: Decimal
+    remaining_quantity: Decimal
+    average_fill_price: Decimal | None
+    correlation_id: str
+    execution_group_id: str | None
+
+
+@dataclass(frozen=True, slots=True)
+class _FillRecord:
+    quantity: Decimal
+    price: Decimal
+    event: ExecutionEvent
 
 
 @dataclass(slots=True)
@@ -57,6 +90,9 @@ class _ExecutionContext:
     correlation_id: str
     execution_group_id: str | None
     events: list[ExecutionEvent] = field(default_factory=list)
+    fills: dict[str, _FillRecord] = field(default_factory=dict)
+    filled_quantity: Decimal = Decimal(0)
+    fill_notional: Decimal = Decimal(0)
 
 
 @dataclass(slots=True)
@@ -154,11 +190,94 @@ class ExecutionOrchestrator:
         context.events.append(event)
         return event
 
+    def process_fill(
+        self,
+        execution_id: str,
+        *,
+        fill_id: str,
+        quantity: Decimal,
+        price: Decimal,
+    ) -> ExecutionEvent:
+        """Apply one incremental fill exactly once and advance the leg lifecycle."""
+        context = self._context(execution_id)
+        fill_quantity = Decimal(str(quantity))
+        fill_price = Decimal(str(price))
+        if not fill_id:
+            raise InvalidFillError("fill_id must be non-empty")
+        if fill_quantity <= 0:
+            raise InvalidFillError("fill quantity must be positive")
+        if fill_price <= 0:
+            raise InvalidFillError("fill price must be positive")
+
+        existing = context.fills.get(fill_id)
+        if existing is not None:
+            if existing.quantity != fill_quantity or existing.price != fill_price:
+                raise ConflictingFillError(
+                    f"fill_id {fill_id!r} was already recorded with different values"
+                )
+            return existing.event
+
+        if context.state not in {
+            ExecutionState.SUBMITTED,
+            ExecutionState.PARTIALLY_FILLED,
+        }:
+            raise InvalidExecutionTransition(
+                f"cannot process fill while execution is {context.state.value}"
+            )
+
+        cumulative_quantity = context.filled_quantity + fill_quantity
+        if cumulative_quantity > context.intent.quantity:
+            raise InvalidFillError("cumulative fill quantity exceeds requested quantity")
+
+        context.filled_quantity = cumulative_quantity
+        context.fill_notional += fill_quantity * fill_price
+        remaining_quantity = context.intent.quantity - cumulative_quantity
+        state = (
+            ExecutionState.FILLED
+            if remaining_quantity == 0
+            else ExecutionState.PARTIALLY_FILLED
+        )
+        context.state = state
+        average_fill_price = context.fill_notional / cumulative_quantity
+        event = self._event(
+            execution_id,
+            context,
+            state,
+            "paper order filled" if state is ExecutionState.FILLED else "paper order partially filled",
+            fill_id=fill_id,
+            fill_quantity=fill_quantity,
+            fill_price=fill_price,
+            cumulative_filled_quantity=cumulative_quantity,
+            remaining_quantity=remaining_quantity,
+            average_fill_price=average_fill_price,
+        )
+        context.events.append(event)
+        context.fills[fill_id] = _FillRecord(fill_quantity, fill_price, event)
+        return event
+
     def current_state(self, execution_id: str) -> ExecutionState:
         return self._context(execution_id).state
 
     def events(self, execution_id: str) -> tuple[ExecutionEvent, ...]:
         return tuple(self._context(execution_id).events)
+
+    def snapshot(self, execution_id: str) -> ExecutionSnapshot:
+        context = self._context(execution_id)
+        average_fill_price = (
+            context.fill_notional / context.filled_quantity
+            if context.filled_quantity > 0
+            else None
+        )
+        return ExecutionSnapshot(
+            execution_id=execution_id,
+            state=context.state,
+            requested_quantity=context.intent.quantity,
+            filled_quantity=context.filled_quantity,
+            remaining_quantity=context.intent.quantity - context.filled_quantity,
+            average_fill_price=average_fill_price,
+            correlation_id=context.correlation_id,
+            execution_group_id=context.execution_group_id,
+        )
 
     def _context(self, execution_id: str) -> _ExecutionContext:
         try:
@@ -172,6 +291,13 @@ class ExecutionOrchestrator:
         context: _ExecutionContext,
         state: ExecutionState,
         message: str,
+        *,
+        fill_id: str | None = None,
+        fill_quantity: Decimal | None = None,
+        fill_price: Decimal | None = None,
+        cumulative_filled_quantity: Decimal | None = None,
+        remaining_quantity: Decimal | None = None,
+        average_fill_price: Decimal | None = None,
     ) -> ExecutionEvent:
         intent = context.intent
         return ExecutionEvent(
@@ -185,4 +311,10 @@ class ExecutionOrchestrator:
             quantity=intent.quantity,
             correlation_id=context.correlation_id,
             execution_group_id=context.execution_group_id,
+            fill_id=fill_id,
+            fill_quantity=fill_quantity,
+            fill_price=fill_price,
+            cumulative_filled_quantity=cumulative_filled_quantity,
+            remaining_quantity=remaining_quantity,
+            average_fill_price=average_fill_price,
         )
