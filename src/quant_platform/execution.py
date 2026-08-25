@@ -6,6 +6,7 @@ from decimal import Decimal
 from typing import Self
 
 from .domain import OrderIntent, Venue
+from .execution_checkpoint import JsonExecutionCheckpointStore
 from .execution_orchestrator import (
     ExecutionOrchestrator,
     GroupReconciliation,
@@ -161,6 +162,9 @@ class PaperExecutionEngine:
     def export_checkpoint(self) -> dict[str, object]:
         return self.orchestrator.export_checkpoint()
 
+    def save_checkpoint(self, store: JsonExecutionCheckpointStore) -> None:
+        store.save(self.export_checkpoint())
+
     @classmethod
     def from_checkpoint(
         cls,
@@ -171,6 +175,20 @@ class PaperExecutionEngine:
     ) -> Self:
         return cls(
             orchestrator=ExecutionOrchestrator.from_checkpoint(payload),
+            max_residual_hedge_notional=max_residual_hedge_notional,
+            max_residual_hedge_slippage_bps=max_residual_hedge_slippage_bps,
+        )
+
+    @classmethod
+    def from_checkpoint_store(
+        cls,
+        store: JsonExecutionCheckpointStore,
+        *,
+        max_residual_hedge_notional: Decimal = Decimal(10000),
+        max_residual_hedge_slippage_bps: Decimal = Decimal(30),
+    ) -> Self:
+        return cls.from_checkpoint(
+            store.load(),
             max_residual_hedge_notional=max_residual_hedge_notional,
             max_residual_hedge_slippage_bps=max_residual_hedge_slippage_bps,
         )

@@ -1,10 +1,13 @@
 import json
+import stat
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
 from quant_platform.domain import OrderIntent, Side, Venue
 from quant_platform.execution import PaperExecutionEngine
+from quant_platform.execution_checkpoint import JsonExecutionCheckpointStore
 from quant_platform.execution_orchestrator import (
     ExecutionRole,
     ExecutionState,
@@ -232,3 +235,30 @@ def test_recovered_engine_rejects_unsafe_hedge_limits(
             max_residual_hedge_notional=notional,
             max_residual_hedge_slippage_bps=slippage,
         )
+
+
+def test_atomic_file_store_persists_and_recovers_checkpoint(tmp_path: Path) -> None:
+    engine = PaperExecutionEngine()
+    buy_id, _ = submit_group(engine)
+    engine.process_fill(
+        buy_id,
+        fill_id="buy-fill",
+        quantity=Decimal("0.004"),
+        price=Decimal(99990),
+    )
+    store = JsonExecutionCheckpointStore(tmp_path / "runtime" / "execution.json")
+
+    engine.save_checkpoint(store)
+    recovered = PaperExecutionEngine.from_checkpoint_store(store)
+
+    assert recovered.orchestrator.snapshot(buy_id).filled_quantity == Decimal("0.004")
+    assert stat.S_IMODE(store.path.stat().st_mode) == 0o600
+    assert list(store.path.parent.glob("*.tmp")) == []
+
+
+def test_file_store_rejects_invalid_json(tmp_path: Path) -> None:
+    store = JsonExecutionCheckpointStore(tmp_path / "execution.json")
+    store.path.write_text("not-json", encoding="utf-8")
+
+    with pytest.raises(InvalidCheckpointError, match="cannot read"):
+        PaperExecutionEngine.from_checkpoint_store(store)

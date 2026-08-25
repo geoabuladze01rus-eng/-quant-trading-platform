@@ -39,8 +39,9 @@ The paper lifecycle is explicit and terminal:
 1. `submit` registers both arbitrage legs under one `execution_group_id`.
 2. `process_fill` applies incremental fills, records cumulative quantity and
    weighted-average price, and safely ignores exact duplicate fill events.
-3. `reconcile_group` finalizes the two primary legs after their orders have
-   filled, closed, or been cancelled. Equal full or partial fills complete as a
+3. `close_order` records `canceled` or `expired` for a primary leg that did not
+   fill completely. `reconcile_group` refuses to run until both legs are either
+   fully filled or explicitly closed. Equal full or partial fills complete as a
    balanced group; unequal fills expose a signed residual and require a hedge.
 4. `hedge_residual` creates and fills a risk-reducing paper order. The default
    guardrails cap hedge notional at 10,000 and adverse slippage at 30 bps. A
@@ -50,6 +51,28 @@ Every transition and fill is retained in the canonical event journal with its
 timestamp, correlation ID, execution group ID, order fields, and fill fields.
 The canonical path has no live-order method and does not call authenticated
 exchange connectors.
+
+### Execution recovery
+
+Canonical state can be checkpointed and restored without losing fill
+idempotency or residual-hedge state:
+
+```python
+from pathlib import Path
+
+from quant_platform.execution import PaperExecutionEngine
+from quant_platform.execution_checkpoint import JsonExecutionCheckpointStore
+
+store = JsonExecutionCheckpointStore(Path("runtime/execution.json"))
+engine.save_checkpoint(store)
+engine = PaperExecutionEngine.from_checkpoint_store(store)
+```
+
+The JSON checkpoint contains order intents, the complete event journal, fill
+identifiers, execution-group membership and reconciliation results. Before use,
+the loader validates state transitions, cumulative quantities, group links and
+hedge references. The file store writes with mode `0600`, flushes data and uses
+an atomic replacement so an interrupted write cannot expose a partial snapshot.
 
 Run locally after installing the development dependencies:
 

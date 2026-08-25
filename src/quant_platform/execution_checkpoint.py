@@ -1,9 +1,14 @@
 """Validated JSON-safe persistence for the canonical execution orchestrator."""
 from __future__ import annotations
 
+import json
+import os
+import tempfile
 from collections.abc import Mapping
+from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
+from pathlib import Path
 from typing import Any
 
 from .domain import OrderIntent, Side, Venue
@@ -22,6 +27,60 @@ from .execution_orchestrator import (
 )
 
 CHECKPOINT_SCHEMA_VERSION = 1
+
+
+@dataclass(frozen=True, slots=True)
+class JsonExecutionCheckpointStore:
+    """Atomically persist validated canonical execution checkpoints as JSON."""
+
+    path: Path
+
+    def save(self, payload: Mapping[str, object]) -> None:
+        restore_checkpoint(payload)
+        serialized = json.dumps(
+            payload,
+            ensure_ascii=False,
+            separators=(",", ":"),
+            sort_keys=True,
+        )
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        temporary_path: Path | None = None
+        try:
+            descriptor, temporary_name = tempfile.mkstemp(
+                dir=self.path.parent,
+                prefix=f".{self.path.name}.",
+                suffix=".tmp",
+            )
+            temporary_path = Path(temporary_name)
+            with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+                handle.write(serialized)
+                handle.flush()
+                os.fsync(handle.fileno())
+            os.chmod(temporary_path, 0o600)
+            os.replace(temporary_path, self.path)
+            self._sync_parent_directory()
+        finally:
+            if temporary_path is not None:
+                temporary_path.unlink(missing_ok=True)
+
+    def load(self) -> dict[str, object]:
+        try:
+            payload = json.loads(self.path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            raise InvalidCheckpointError("cannot read execution checkpoint") from exc
+        checkpoint = dict(_mapping(payload, "checkpoint"))
+        restore_checkpoint(checkpoint)
+        return checkpoint
+
+    def _sync_parent_directory(self) -> None:
+        descriptor = os.open(
+            self.path.parent,
+            os.O_RDONLY | getattr(os, "O_DIRECTORY", 0),
+        )
+        try:
+            os.fsync(descriptor)
+        finally:
+            os.close(descriptor)
 
 
 def export_checkpoint(orchestrator: ExecutionOrchestrator) -> dict[str, object]:
