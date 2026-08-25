@@ -1,18 +1,26 @@
 from __future__ import annotations
 
 import asyncio
+import math
 import time
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
+from pathlib import Path
 
 from .arbitrage import ArbitrageScanner
 from .audit import AuditLog
 from .collector_factory import build_public_collector
 from .domain import Quote, Venue
 from .execution import PaperExecutionEngine
+from .execution_checkpoint import JsonExecutionCheckpointStore
+from .execution_timeout import (
+    ExecutionTimeoutController,
+    TimeoutSweepResult,
+)
 from .pipeline import PaperArbitragePipeline
 from .risk import RiskEngine
+from .settings import settings
 from .strategies.inter_exchange import InterExchangeArbitrageStrategy
 
 
@@ -47,6 +55,8 @@ class RealtimePaperArbitrage:
     quantity: Decimal = Decimal("0.001")
     portfolio_value: Decimal = Decimal(100000)
     decision_cooldown_seconds: float = 2.0
+    execution_timeout_seconds: float = 5.0
+    timeout_sweep_interval_seconds: float = 1.0
     scanner: ArbitrageScanner = field(default_factory=ArbitrageScanner)
     risk: RiskEngine = field(default_factory=RiskEngine)
     execution: PaperExecutionEngine = field(default_factory=PaperExecutionEngine)
@@ -54,10 +64,21 @@ class RealtimePaperArbitrage:
     strategy: InterExchangeArbitrageStrategy = field(default_factory=InterExchangeArbitrageStrategy)
     cache: QuoteCache = field(init=False)
     pipeline: PaperArbitragePipeline = field(init=False)
+    timeout_controller: ExecutionTimeoutController = field(init=False)
     _last_decision_at: float = field(init=False, default=0.0)
     _tasks: list[asyncio.Task[None]] = field(init=False, default_factory=list)
 
     def __post_init__(self) -> None:
+        if (
+            not math.isfinite(self.execution_timeout_seconds)
+            or self.execution_timeout_seconds <= 0
+        ):
+            raise ValueError("execution timeout must be finite and positive")
+        if (
+            not math.isfinite(self.timeout_sweep_interval_seconds)
+            or self.timeout_sweep_interval_seconds <= 0
+        ):
+            raise ValueError("timeout sweep interval must be finite and positive")
         self.cache = QuoteCache()
         self.pipeline = PaperArbitragePipeline(
             scanner=self.scanner,
@@ -65,6 +86,10 @@ class RealtimePaperArbitrage:
             execution=self.execution,
             audit=self.audit,
             strategy=self.strategy,
+        )
+        self.timeout_controller = ExecutionTimeoutController(
+            self.execution,
+            timeout=timedelta(seconds=self.execution_timeout_seconds),
         )
 
     async def on_quote(self, quote: Quote) -> None:
@@ -80,9 +105,41 @@ class RealtimePaperArbitrage:
         self._last_decision_at = now
         self.pipeline.run(snapshot, self.portfolio_value, self.quantity)
 
+    def sweep_execution_timeouts(
+        self,
+        *,
+        now: datetime | None = None,
+    ) -> tuple[TimeoutSweepResult, ...]:
+        results = self.timeout_controller.sweep(now=now)
+        for result in results:
+            reconciliation = result.reconciliation
+            residual = reconciliation.residual if reconciliation is not None else None
+            self.audit.record(
+                "execution_group_timeout",
+                execution_group_id=result.execution_group_id,
+                expired_execution_ids=list(result.expired_execution_ids),
+                reconciliation_state=(
+                    reconciliation.state.value if reconciliation is not None else None
+                ),
+                residual_signed_quantity=(
+                    str(residual.signed_quantity) if residual is not None else None
+                ),
+                hedge_required=(
+                    reconciliation.hedge_required if reconciliation is not None else False
+                ),
+                resulting_states=[state.value for state in result.resulting_states],
+            )
+        return results
+
+    async def _timeout_watchdog(self) -> None:
+        while True:
+            await asyncio.sleep(self.timeout_sweep_interval_seconds)
+            self.sweep_execution_timeouts()
+
     async def start(self) -> None:
         collectors = [build_public_collector(venue, self.symbol, self.on_quote) for venue in self.venues]
         self._tasks = [asyncio.create_task(collector.run()) for collector in collectors]
+        self._tasks.append(asyncio.create_task(self._timeout_watchdog()))
         try:
             await asyncio.gather(*self._tasks)
         finally:
@@ -97,8 +154,26 @@ class RealtimePaperArbitrage:
         self._tasks.clear()
 
 
-def build_default_runtime() -> RealtimePaperArbitrage:
-    return RealtimePaperArbitrage()
+def build_default_runtime(
+    *,
+    checkpoint_path: Path | None = None,
+) -> RealtimePaperArbitrage:
+    if not settings.paper_trading:
+        raise RuntimeError("realtime runtime requires paper trading; live trading is disabled")
+
+    store = JsonExecutionCheckpointStore(
+        checkpoint_path or Path(settings.execution_checkpoint_path)
+    )
+    execution = (
+        PaperExecutionEngine.from_checkpoint_store(store)
+        if store.path.exists()
+        else PaperExecutionEngine(checkpoint_store=store)
+    )
+    return RealtimePaperArbitrage(
+        execution=execution,
+        execution_timeout_seconds=settings.execution_timeout_seconds,
+        timeout_sweep_interval_seconds=settings.timeout_sweep_interval_seconds,
+    )
 
 
 def main() -> None:

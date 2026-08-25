@@ -64,7 +64,8 @@ from quant_platform.execution import PaperExecutionEngine
 from quant_platform.execution_checkpoint import JsonExecutionCheckpointStore
 
 store = JsonExecutionCheckpointStore(Path("runtime/execution.json"))
-engine.save_checkpoint(store)
+engine = PaperExecutionEngine(checkpoint_store=store)
+# submit / fill / close / reconcile / hedge now save automatically
 engine = PaperExecutionEngine.from_checkpoint_store(store)
 ```
 
@@ -73,6 +74,17 @@ identifiers, execution-group membership and reconciliation results. Before use,
 the loader validates state transitions, cumulative quantities, group links and
 hedge references. The file store writes with mode `0600`, flushes data and uses
 an atomic replacement so an interrupted write cannot expose a partial snapshot.
+The default real-time paper runtime uses `runtime/execution.json`, restores it
+on startup and continues automatic checkpointing after recovery. A corrupted
+checkpoint stops startup instead of silently discarding execution state.
+
+An execution watchdog expires open paper legs after five seconds and then
+reconciles the two-leg group. It also closes an orphaned first leg left by an
+interrupted two-leg submission. Any asymmetric fill is audited and remains in
+`hedge_required`; the watchdog does not invent a hedge price without fresh
+market data. These intervals and the checkpoint path can be configured with
+`EXECUTION_TIMEOUT_SECONDS`, `TIMEOUT_SWEEP_INTERVAL_SECONDS` and
+`EXECUTION_CHECKPOINT_PATH`.
 
 Run locally after installing the development dependencies:
 
