@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from decimal import Decimal
+from typing import Self
 
 from .domain import OrderIntent, Venue
 from .execution_orchestrator import (
@@ -19,6 +21,24 @@ class PaperExecutionEngine:
     orchestrator: ExecutionOrchestrator = field(default_factory=ExecutionOrchestrator)
     max_residual_hedge_notional: Decimal = Decimal(10000)
     max_residual_hedge_slippage_bps: Decimal = Decimal(30)
+
+    def __post_init__(self) -> None:
+        self.max_residual_hedge_notional = Decimal(
+            str(self.max_residual_hedge_notional)
+        )
+        self.max_residual_hedge_slippage_bps = Decimal(
+            str(self.max_residual_hedge_slippage_bps)
+        )
+        if (
+            not self.max_residual_hedge_notional.is_finite()
+            or self.max_residual_hedge_notional <= 0
+        ):
+            raise ValueError("max residual hedge notional must be finite and positive")
+        if (
+            not self.max_residual_hedge_slippage_bps.is_finite()
+            or self.max_residual_hedge_slippage_bps < 0
+        ):
+            raise ValueError("max residual hedge slippage must be finite and non-negative")
 
     def submit(
         self,
@@ -136,4 +156,21 @@ class PaperExecutionEngine:
             reference_price=reference_price,
             max_notional=self.max_residual_hedge_notional,
             max_slippage_bps=self.max_residual_hedge_slippage_bps,
+        )
+
+    def export_checkpoint(self) -> dict[str, object]:
+        return self.orchestrator.export_checkpoint()
+
+    @classmethod
+    def from_checkpoint(
+        cls,
+        payload: Mapping[str, object],
+        *,
+        max_residual_hedge_notional: Decimal = Decimal(10000),
+        max_residual_hedge_slippage_bps: Decimal = Decimal(30),
+    ) -> Self:
+        return cls(
+            orchestrator=ExecutionOrchestrator.from_checkpoint(payload),
+            max_residual_hedge_notional=max_residual_hedge_notional,
+            max_residual_hedge_slippage_bps=max_residual_hedge_slippage_bps,
         )

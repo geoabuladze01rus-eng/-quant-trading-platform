@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -64,6 +65,10 @@ class ConflictingFillError(InvalidFillError):
 
 class InvalidExecutionGroupError(ValueError):
     """Raised when a two-leg execution group is incomplete or inconsistent."""
+
+
+class InvalidCheckpointError(ValueError):
+    """Raised when persisted canonical execution state fails integrity checks."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -385,6 +390,22 @@ class ExecutionOrchestrator:
             execution_group_id=context.execution_group_id,
             execution_role=context.execution_role,
         )
+
+    def export_checkpoint(self) -> dict[str, object]:
+        """Return a deterministic JSON-safe snapshot of canonical execution state."""
+        from .execution_checkpoint import export_checkpoint
+
+        return export_checkpoint(self)
+
+    @classmethod
+    def from_checkpoint(
+        cls,
+        payload: Mapping[str, object],
+    ) -> ExecutionOrchestrator:
+        """Restore canonical state after validating the complete checkpoint first."""
+        from .execution_checkpoint import restore_checkpoint
+
+        return restore_checkpoint(payload)
 
     def reconcile_group(
         self,
