@@ -107,6 +107,15 @@ class ExecutionSnapshot:
 
 
 @dataclass(frozen=True, slots=True)
+class ExecutionGroupSnapshot:
+    execution_group_id: str
+    execution_ids: tuple[str, ...]
+    states: tuple[ExecutionState, ...]
+    submitted_at: datetime
+    reconciled: bool
+
+
+@dataclass(frozen=True, slots=True)
 class ResidualExposure:
     symbol: str
     signed_quantity: Decimal
@@ -390,6 +399,22 @@ class ExecutionOrchestrator:
             execution_group_id=context.execution_group_id,
             execution_role=context.execution_role,
         )
+
+    def group_snapshots(self) -> tuple[ExecutionGroupSnapshot, ...]:
+        """Expose immutable primary-leg status for recovery and timeout control."""
+        snapshots: list[ExecutionGroupSnapshot] = []
+        for group_id, execution_ids in sorted(self._group_legs.items()):
+            contexts = [self._context(execution_id) for execution_id in execution_ids]
+            snapshots.append(
+                ExecutionGroupSnapshot(
+                    execution_group_id=group_id,
+                    execution_ids=tuple(execution_ids),
+                    states=tuple(context.state for context in contexts),
+                    submitted_at=max(context.events[0].timestamp for context in contexts),
+                    reconciled=group_id in self._group_reconciliations,
+                )
+            )
+        return tuple(snapshots)
 
     def export_checkpoint(self) -> dict[str, object]:
         """Return a deterministic JSON-safe snapshot of canonical execution state."""
