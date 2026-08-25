@@ -21,6 +21,8 @@ class ExecutionState(StrEnum):
     SUBMITTED = "submitted"
     PARTIALLY_FILLED = "partially_filled"
     FILLED = "filled"
+    CANCELED = "canceled"
+    EXPIRED = "expired"
     RECONCILING = "reconciling"
     HEDGE_REQUIRED = "hedge_required"
     COMPLETED = "completed"
@@ -30,6 +32,11 @@ class ExecutionState(StrEnum):
 class ExecutionRole(StrEnum):
     PRIMARY = "primary"
     RESIDUAL_HEDGE = "residual_hedge"
+
+
+class OrderCloseReason(StrEnum):
+    CANCELED = "canceled"
+    EXPIRED = "expired"
 
 
 class GroupReconciliationState(StrEnum):
@@ -155,7 +162,8 @@ class ExecutionOrchestrator:
             {
                 ExecutionState.PARTIALLY_FILLED,
                 ExecutionState.FILLED,
-                ExecutionState.RECONCILING,
+                ExecutionState.CANCELED,
+                ExecutionState.EXPIRED,
                 ExecutionState.HALTED,
             }
         ),
@@ -163,8 +171,8 @@ class ExecutionOrchestrator:
             {
                 ExecutionState.PARTIALLY_FILLED,
                 ExecutionState.FILLED,
-                ExecutionState.RECONCILING,
-                ExecutionState.HEDGE_REQUIRED,
+                ExecutionState.CANCELED,
+                ExecutionState.EXPIRED,
                 ExecutionState.HALTED,
             }
         ),
@@ -174,6 +182,12 @@ class ExecutionOrchestrator:
                 ExecutionState.COMPLETED,
                 ExecutionState.HALTED,
             }
+        ),
+        ExecutionState.CANCELED: frozenset(
+            {ExecutionState.RECONCILING, ExecutionState.HALTED}
+        ),
+        ExecutionState.EXPIRED: frozenset(
+            {ExecutionState.RECONCILING, ExecutionState.HALTED}
         ),
         ExecutionState.RECONCILING: frozenset(
             {
@@ -320,6 +334,32 @@ class ExecutionOrchestrator:
         context.events.append(event)
         context.fills[fill_id] = _FillRecord(fill_quantity, fill_price, event)
         return event
+
+    def close_order(
+        self,
+        execution_id: str,
+        reason: OrderCloseReason,
+        *,
+        message: str | None = None,
+    ) -> ExecutionEvent:
+        """Record a terminal venue outcome before group reconciliation."""
+        context = self._context(execution_id)
+        close_reason = OrderCloseReason(reason)
+        target_state = ExecutionState(close_reason.value)
+        if context.state is target_state:
+            return context.events[-1]
+        if context.state not in {
+            ExecutionState.SUBMITTED,
+            ExecutionState.PARTIALLY_FILLED,
+        }:
+            raise InvalidExecutionTransition(
+                f"cannot close order while execution is {context.state.value}"
+            )
+        return self.transition(
+            execution_id,
+            target_state,
+            message or f"paper order {target_state.value}",
+        )
 
     def current_state(self, execution_id: str) -> ExecutionState:
         return self._context(execution_id).state
@@ -590,12 +630,12 @@ class ExecutionOrchestrator:
         for execution_id in (buy_execution_id, sell_execution_id):
             state = self.current_state(execution_id)
             if state not in {
-                ExecutionState.SUBMITTED,
-                ExecutionState.PARTIALLY_FILLED,
                 ExecutionState.FILLED,
+                ExecutionState.CANCELED,
+                ExecutionState.EXPIRED,
             }:
                 raise InvalidExecutionTransition(
-                    f"cannot reconcile execution while it is {state.value}"
+                    f"cannot reconcile execution before order closure: {state.value}"
                 )
         self.transition(buy_execution_id, ExecutionState.RECONCILING, message)
         self.transition(sell_execution_id, ExecutionState.RECONCILING, message)

@@ -4,7 +4,11 @@ from dataclasses import dataclass, field
 from decimal import Decimal
 
 from .domain import OrderIntent, Venue
-from .execution_orchestrator import ExecutionOrchestrator, GroupReconciliation
+from .execution_orchestrator import (
+    ExecutionOrchestrator,
+    GroupReconciliation,
+    OrderCloseReason,
+)
 from .risk import RiskDecision
 
 
@@ -93,6 +97,27 @@ class PaperExecutionEngine:
             execution_group_id,
             tolerance=tolerance,
         )
+
+    def close_order(
+        self,
+        execution_id: str,
+        reason: OrderCloseReason,
+        *,
+        message: str | None = None,
+    ) -> dict[str, str]:
+        event = self.orchestrator.close_order(
+            execution_id,
+            reason,
+            message=message,
+        )
+        return {
+            "execution_id": execution_id,
+            "event_id": event.event_id,
+            "state": event.state.value,
+            "message": event.message,
+            "correlation_id": event.correlation_id or "",
+            "execution_group_id": event.execution_group_id or "",
+        }
 
     def hedge_residual(
         self,
