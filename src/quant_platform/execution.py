@@ -22,6 +22,7 @@ class PaperExecutionEngine:
     orchestrator: ExecutionOrchestrator = field(default_factory=ExecutionOrchestrator)
     max_residual_hedge_notional: Decimal = Decimal(10000)
     max_residual_hedge_slippage_bps: Decimal = Decimal(30)
+    checkpoint_store: JsonExecutionCheckpointStore | None = None
 
     def __post_init__(self) -> None:
         self.max_residual_hedge_notional = Decimal(
@@ -65,6 +66,8 @@ class PaperExecutionEngine:
         if event.execution_group_id is not None:
             result["execution_group_id"] = event.execution_group_id
 
+        self._persist_checkpoint()
+
         if not risk.approved:
             result.update({"status": "rejected", "reason": risk.reason})
             return result
@@ -94,6 +97,7 @@ class PaperExecutionEngine:
             quantity=quantity,
             price=price,
         )
+        self._persist_checkpoint()
         return {
             "execution_id": execution_id,
             "event_id": event.event_id,
@@ -114,10 +118,12 @@ class PaperExecutionEngine:
         *,
         tolerance: Decimal = Decimal(0),
     ) -> GroupReconciliation:
-        return self.orchestrator.reconcile_group(
+        reconciliation = self.orchestrator.reconcile_group(
             execution_group_id,
             tolerance=tolerance,
         )
+        self._persist_checkpoint()
+        return reconciliation
 
     def close_order(
         self,
@@ -131,6 +137,7 @@ class PaperExecutionEngine:
             reason,
             message=message,
         )
+        self._persist_checkpoint()
         return {
             "execution_id": execution_id,
             "event_id": event.event_id,
@@ -149,7 +156,7 @@ class PaperExecutionEngine:
         price: Decimal,
         reference_price: Decimal,
     ) -> GroupReconciliation:
-        return self.orchestrator.execute_paper_residual_hedge(
+        reconciliation = self.orchestrator.execute_paper_residual_hedge(
             execution_group_id,
             venue=venue,
             fill_id=fill_id,
@@ -158,12 +165,18 @@ class PaperExecutionEngine:
             max_notional=self.max_residual_hedge_notional,
             max_slippage_bps=self.max_residual_hedge_slippage_bps,
         )
+        self._persist_checkpoint()
+        return reconciliation
 
     def export_checkpoint(self) -> dict[str, object]:
         return self.orchestrator.export_checkpoint()
 
     def save_checkpoint(self, store: JsonExecutionCheckpointStore) -> None:
         store.save(self.export_checkpoint())
+
+    def _persist_checkpoint(self) -> None:
+        if self.checkpoint_store is not None:
+            self.save_checkpoint(self.checkpoint_store)
 
     @classmethod
     def from_checkpoint(
@@ -172,11 +185,13 @@ class PaperExecutionEngine:
         *,
         max_residual_hedge_notional: Decimal = Decimal(10000),
         max_residual_hedge_slippage_bps: Decimal = Decimal(30),
+        checkpoint_store: JsonExecutionCheckpointStore | None = None,
     ) -> Self:
         return cls(
             orchestrator=ExecutionOrchestrator.from_checkpoint(payload),
             max_residual_hedge_notional=max_residual_hedge_notional,
             max_residual_hedge_slippage_bps=max_residual_hedge_slippage_bps,
+            checkpoint_store=checkpoint_store,
         )
 
     @classmethod
@@ -191,4 +206,5 @@ class PaperExecutionEngine:
             store.load(),
             max_residual_hedge_notional=max_residual_hedge_notional,
             max_residual_hedge_slippage_bps=max_residual_hedge_slippage_bps,
+            checkpoint_store=store,
         )

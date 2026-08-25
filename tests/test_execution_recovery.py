@@ -256,6 +256,70 @@ def test_atomic_file_store_persists_and_recovers_checkpoint(tmp_path: Path) -> N
     assert list(store.path.parent.glob("*.tmp")) == []
 
 
+def test_checkpoint_store_tracks_every_execution_mutation(tmp_path: Path) -> None:
+    store = JsonExecutionCheckpointStore(tmp_path / "runtime" / "execution.json")
+    engine = PaperExecutionEngine(checkpoint_store=store)
+
+    buy_id, sell_id = submit_group(engine)
+    submitted = PaperExecutionEngine.from_checkpoint_store(store)
+    assert submitted.orchestrator.current_state(buy_id) is ExecutionState.SUBMITTED
+    assert submitted.orchestrator.current_state(sell_id) is ExecutionState.SUBMITTED
+
+    engine.process_fill(
+        buy_id,
+        fill_id="buy-fill",
+        quantity=Decimal("0.01"),
+        price=Decimal(99990),
+    )
+    engine.process_fill(
+        sell_id,
+        fill_id="sell-fill",
+        quantity=Decimal("0.004"),
+        price=Decimal(100100),
+    )
+    engine.close_order(sell_id, OrderCloseReason.EXPIRED)
+    reconciled = engine.reconcile_group("group-1")
+
+    pending_hedge = PaperExecutionEngine.from_checkpoint_store(store)
+    assert reconciled.state is GroupReconciliationState.HEDGE_REQUIRED
+    assert (
+        pending_hedge.reconcile_group("group-1").state
+        is GroupReconciliationState.HEDGE_REQUIRED
+    )
+
+    engine.hedge_residual(
+        "group-1",
+        venue=Venue.BINANCE,
+        fill_id="hedge-fill",
+        price=Decimal(100010),
+        reference_price=Decimal(100000),
+    )
+    completed = PaperExecutionEngine.from_checkpoint_store(store)
+
+    result = completed.reconcile_group("group-1")
+    assert result.state is GroupReconciliationState.HEDGED
+    assert result.post_hedge_residual_quantity == 0
+
+
+def test_recovered_store_continues_automatic_checkpointing(tmp_path: Path) -> None:
+    store = JsonExecutionCheckpointStore(tmp_path / "execution.json")
+    engine = PaperExecutionEngine(checkpoint_store=store)
+    buy_id, _ = submit_group(engine)
+
+    recovered = PaperExecutionEngine.from_checkpoint_store(store)
+    recovered.process_fill(
+        buy_id,
+        fill_id="fill-after-restart",
+        quantity=Decimal("0.004"),
+        price=Decimal(99990),
+    )
+
+    second_recovery = PaperExecutionEngine.from_checkpoint_store(store)
+    assert second_recovery.orchestrator.snapshot(buy_id).filled_quantity == Decimal(
+        "0.004"
+    )
+
+
 def test_file_store_rejects_invalid_json(tmp_path: Path) -> None:
     store = JsonExecutionCheckpointStore(tmp_path / "execution.json")
     store.path.write_text("not-json", encoding="utf-8")
